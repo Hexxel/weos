@@ -18,6 +18,7 @@
 #include <magicvar.h>
 #include <binfmt.h>
 #include <restart.h>
+#include <glob.h>
 #include <globalvar.h>
 
 #include <asm/byteorder.h>
@@ -25,6 +26,12 @@
 #include <asm/barebox-arm.h>
 #include <asm/armlinux.h>
 #include <asm/system.h>
+
+#include <crc.h>
+#include <cramfs/cramfs_fs.h>
+
+#include <generated/utsrelease.h>
+
 
 /*
  * sdram_start_and_size() - determine place for putting the kernel/oftree/initrd
@@ -211,6 +218,8 @@ static int do_bootm_linux(struct image_data *data)
 	ret = bootm_load_os(data, load_address);
 	if (ret)
 		return ret;
+
+	devices_shutdown();
 
 	return __do_bootm_linux(data, mem_free, 0);
 }
@@ -600,8 +609,149 @@ static struct binfmt_hook binfmt_barebox_hook = {
 	.exec = "bootm",
 };
 
+
+static int __cramfs_crc(const struct cramfs_super *img)
+{
+	struct cramfs_super hdr = *img;
+	u32 crc, img_crc = CRAMFS_32(img->fsid.crc);
+
+	hdr.fsid.crc = 0;
+	crc = crc32(0, &hdr, sizeof(hdr));
+
+	crc = crc32(crc, img + 1, CRAMFS_32(img->size) - sizeof (*img));
+
+	if (crc != img_crc)
+		pr_info("bootm: invalid CRC\n");
+
+	return crc != img_crc;
+}
+
+static void __add_mtdparts_one(char *mtdparts, const char *flash)
+{
+	char *part, *flashdir = basprintf("/env/etc/mtdparts/%s/*", flash);
+	glob_t g;
+	int err, i;
+
+	err = glob(flashdir, 0, NULL, &g);
+	if (err == GLOB_NOMATCH)
+		return;
+
+	strcat(mtdparts, flash);
+	strcat(mtdparts, ":");
+
+	for (i = 0; i < g.gl_pathc; i++) {
+		if (i)
+			strcat(mtdparts, ",");
+
+		part = read_file_line(g.gl_pathv[i]);
+		strcat(mtdparts, part);
+	}
+
+	globfree(&g);
+}
+
+static void __add_mtdparts(void)
+{
+	char *mtdparts = xzalloc(1024);
+	struct dirent *flash;
+	DIR *dir;
+	int first = 1;
+
+	dir = opendir("/env/etc/mtdparts");
+	if (!dir)
+		return;
+
+	strcpy(mtdparts, "mtdparts=");
+
+	while ((flash = readdir(dir))) {
+		if (DOT_OR_DOTDOT(flash->d_name))
+			continue;
+
+		if (first)
+			first = 0;
+		else
+			strcat(mtdparts, ";");
+
+		__add_mtdparts_one(mtdparts, flash->d_name);
+	}
+
+	closedir(dir);
+
+	globalvar_add_simple("linux.bootargs.mtdparts", mtdparts);
+}
+
+static int do_bootm_cramfs(struct image_data *data)
+{
+	struct cramfs_super *img;
+	unsigned long crc, imgsz, ksz;
+	int fd;
+
+	fd = open(data->os_file, O_RDONLY);
+	if (fd < 0)
+		return fd;
+
+	img = memmap(fd, PROT_READ);
+	close(fd);
+	if (!img)
+		return -EIO;
+
+	if (img == -1)
+		return -EIO;
+
+	crc   = CRAMFS_32(img->fsid.crc);
+	imgsz = CRAMFS_32(img->size);
+	ksz   = CRAMFS_GET_OFFSET (&(img->root)) << 2;
+
+	if (data->initrd_file) {
+		if (img != (void *)data->initrd_address)
+			return -EINVAL;
+
+		data->initrd_res = request_sdram_region("initrd",
+							data->initrd_address,
+							imgsz);
+		if (!data->initrd_res)
+			return -ENOMEM;
+
+		data->os_address = PAGE_ALIGN(data->initrd_res->end);
+
+		globalvar_add_simple("linux.bootargs.rdsize",
+				     basprintf("ramdisk_size=%lu",
+					      (imgsz + SZ_1K - 1) / SZ_1K));
+	}
+
+	data->os_res = request_sdram_region("zImage", data->os_address, ksz);
+	if (!data->os_res)
+		return -ENOMEM;
+
+	memcpy((void *)data->os_address, img + 1, ksz);
+
+	if (__cramfs_crc(img))
+		return -EINVAL;
+
+	__add_mtdparts();
+
+	globalvar_add_simple("linux.bootargs.redboot_rel",
+			     basprintf("redboot_rel=%s", UTS_RELEASE));
+
+	printf("\e[;1m[ OK ]\e[0m\n");
+	return __do_bootm_linux(data, 0, 0);
+}
+
+static struct image_handler cramfs_handler = {
+	.name = "Westermo CramFS Image",
+	.bootm = do_bootm_cramfs,
+	.filetype = filetype_cramfs,
+};
+
+static struct binfmt_hook binfmt_cramfs_hook = {
+	.type = filetype_cramfs,
+	.exec = "bootm",
+};
+
 static int armlinux_register_image_handler(void)
 {
+	register_image_handler(&cramfs_handler);
+
 	register_image_handler(&barebox_handler);
 	register_image_handler(&uimage_handler);
 	register_image_handler(&rawimage_handler);

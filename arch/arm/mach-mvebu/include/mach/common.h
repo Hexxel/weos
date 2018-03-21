@@ -27,6 +27,8 @@
 /* #including <asm/barebox-arm.h> yields a circle, so we need a forward decl */
 uint32_t get_runtime_offset(void);
 
+int mvebu_set_memory(u64 phys_base, u64 phys_size);
+
 static inline void __iomem *mvebu_get_initial_int_reg_base(void)
 {
 #ifdef __PBL__

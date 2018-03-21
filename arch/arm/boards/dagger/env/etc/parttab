@@ -1,0 +1,25 @@
+#!/bin/sh
+
+addpart -n /dev/ram0 64M@128M(ramload)
+
+# spi flash partitions using indirect access
+addpart -n /dev/m25p0   56M@1M(primary)
+addpart -n /dev/m25p0  56M@57M(secondary)
+addpart -n /dev/m25p0 15M@113M(config)
+
+# boot flash (32Mb)
+addpart -n /dev/m25p1 32M@0(boot)ro
+
+# FPGA flash (16Mb)
+addpart -n /dev/m25p2      512k@0(fpga_boot)ro
+addpart -n /dev/m25p2 15872k@512k(fpga_multiboot)
+
+# read-only spi flash partitions using direct (memory mapped) access
+addpart -n /dev/mem 128M@0xa8000000(spimem)
+addpart    /dev/spimem    768k@0(self0)ro
+addpart    /dev/spimem 256k@728k(etc)ro
+addpart    /dev/spimem    56M@1M(primary)ro
+addpart    /dev/spimem   56M@57M(secondary)ro
+addpart    /dev/spimem  15M@113M(config)ro
+
+addpart -n /dev/mem 64M@0xd4000000(fpga)

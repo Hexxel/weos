@@ -1,0 +1,19 @@
+#!/bin/sh
+
+global hostname=dagger
+
+export kernel_load=0x1000000
+export ramload_base=0x8000000
+
+export root_primary="/dev/mtdblock2"
+export root_secondary="/dev/mtdblock3"
+
+global linux.bootargs.console="console=ttyS0,115200n8"
+
+# Set Sys FPGA SPI mux to access Sys FPGA registers
+i2c_write -b 0 -a 0x70 -r 0x0C 0x0c
+# Set Red 'ON' LED to on and other system LEDs to off.
+# FPGA LED control register @d4005000
+mw -l 0xd4005000 0x00000004
+# Set Sys FPGA SPI mux to access Sys FPGA configuration flash
+i2c_write -b 0 -a 0x70 -r 0x0C 0x0d

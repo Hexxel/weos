@@ -76,5 +76,14 @@ static inline u16 mvebu_get_soc_revid(void)
 #define DEVID_MV78260		0x7826
 #define DEVID_MV78460		0x7846
 #define DEVID_MV78880		0x7888
+/* MSys */
+#define DEVID_98DX3233		0x3233	/* AlleyCat3 Series*/
+#define DEVID_98DX3234		0x3234
+#define DEVID_98DX3235		0x3235
+#define DEVID_98DX3236		0x3236
+#define DEVID_98DX3333		0x3333	/* PonCat3 Series*/
+#define DEVID_98DX3334		0x3334
+#define DEVID_98DX3335		0x3335
+#define DEVID_98DX3336		0x3336
 
 #endif /* __MACH_MVEBU_SOCID_H */

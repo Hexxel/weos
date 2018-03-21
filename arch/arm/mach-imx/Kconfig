@@ -2,6 +2,7 @@ if ARCH_IMX
 
 config ARCH_TEXT_BASE
 	hex
+	default 0xa3f00000 if MACH_BASIS
 	default 0x83f00000 if MACH_EUKREA_CPUIMX25
 	default 0xa0000000 if MACH_EUKREA_CPUIMX27
 	default 0x87f00000 if MACH_EUKREA_CPUIMX35
@@ -485,6 +486,13 @@ config MACH_IMX27ADS
 	select ARCH_IMX27
 	help
 	  Say Y here if you are using the Freescale i.MX27ads board equipped
+	  with a Freescale i.MX27 Processor
+
+config MACH_BASIS
+	bool "Westermo Basis"
+	select ARCH_IMX27
+	help
+	  Say Y here if you are using Westermo's Basis platform equipped
 	  with a Freescale i.MX27 Processor
 
 config MACH_NESO

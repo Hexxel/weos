@@ -253,7 +253,7 @@ static void setup_tags(unsigned long initrd_address,
 
 	setup_end_tag();
 
-	printf("commandline: %s\n"
+	pr_debug("commandline: %s\n"
 	       "arch_number: %d\n", commandline, armlinux_get_architecture());
 
 }

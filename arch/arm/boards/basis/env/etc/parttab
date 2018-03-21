@@ -1,0 +1,7 @@
+#!/bin/sh
+
+addpart -n /dev/ram0 32M@16M(ramload)
+
+addpart -n /dev/nor0 12800k@512k(primary)
+addpart -n /dev/nor0 12800k@13312k(secondary)
+addpart -n /dev/nor0 6400k@26112k(config)

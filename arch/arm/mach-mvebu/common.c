@@ -61,6 +61,7 @@ EXPORT_SYMBOL(soc_revid);
 static const struct of_device_id mvebu_pcie_of_ids[] = {
 	{ .compatible = "marvell,armada-xp-pcie", },
 	{ .compatible = "marvell,armada-370-pcie", },
+	{ .compatible = "marvell,msys-pcie", },
 	{ .compatible = "marvell,dove-pcie" },
 	{ .compatible = "marvell,kirkwood-pcie" },
 	{ },
@@ -210,3 +211,66 @@ void __naked __noreturn armada_370_xp_barebox_entry(void *boarddata)
 
 	barebox_arm_entry(0, armada_370_xp_memory_find(), boarddata);
 }
+
+/*
+ * Memory size is set up by BootROM and can be read from SoC's ram controller
+ * registers. Fixup provided DTs to reflect accessible amount of directly
+ * attached RAM. Removable RAM, e.g. SODIMM, should be added by a per-board
+ * fixup.
+ */
+int mvebu_set_memory(u64 phys_base, u64 phys_size)
+{
+	struct device_node *np, *root;
+	__be32 reg[4];
+	int na, ns;
+
+	root = of_get_root_node();
+	if (!root)
+		return -EINVAL;
+
+	np = of_find_node_by_path("/memory");
+	if (!np)
+		np = of_create_node(root, "/memory");
+	if (!np)
+		return -EINVAL;
+
+	na = of_n_addr_cells(np);
+	ns = of_n_size_cells(np);
+
+	if (na == 2) {
+		reg[0] = cpu_to_be32(phys_base >> 32);
+		reg[1] = cpu_to_be32(phys_base & 0xffffffff);
+	} else {
+		reg[0] = cpu_to_be32(phys_base & 0xffffffff);
+	}
+
+	if (ns == 2) {
+		reg[2] = cpu_to_be32(phys_size >> 32);
+		reg[3] = cpu_to_be32(phys_size & 0xffffffff);
+	} else {
+		reg[1] = cpu_to_be32(phys_size & 0xffffffff);
+	}
+
+	if (of_set_property(np, "device_type", "memory", sizeof("memory"), 1) ||
+	    of_set_property(np, "reg", reg, sizeof(u32) * (na + ns), 1))
+		pr_err("Unable to fixup memory node\n");
+
+	return 0;
+}
+
+/*
+ * Determining the actual memory size is highly SoC dependent,
+ * but for all SoCs RAM starts at 0x00000000. Therefore, we start
+ * with a minimal memory setup of 64M and probe correct memory size
+ * later.
+ */
+#define MVEBU_BOOTUP_MEMORY_BASE	0x00000000
+#define MVEBU_BOOTUP_MEMORY_SIZE	SZ_64M
+
+void __naked __noreturn mvebu_barebox_entry(void *boarddata)
+{
+	mvebu_remap_registers();
+	barebox_arm_entry(MVEBU_BOOTUP_MEMORY_BASE,
+			  MVEBU_BOOTUP_MEMORY_SIZE, boarddata);
+}
+

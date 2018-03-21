@@ -1,0 +1,10 @@
+#!/bin/sh
+
+export kernel_load=0xa1000000
+export ramload_base=0xa1000000
+
+export root_primary="/dev/mtdblock1"
+export root_secondary="/dev/mtdblock2"
+
+global linux.bootargs.console="console=ttymxc0,115200"
+

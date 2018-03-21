@@ -6,6 +6,7 @@ config ARCH_TEXT_BASE
 	default 0x2000000 if ARCH_ARMADA_XP
 	default 0x2000000 if ARCH_DOVE
 	default 0x2000000 if ARCH_KIRKWOOD
+	default 0x2000000 if ARCH_MSYS
 
 config ARCH_ARMADA_370
 	bool
@@ -31,6 +32,11 @@ config ARCH_KIRKWOOD
 	bool
 	select CPU_FEROCEON
 	select CLOCKSOURCE_ORION
+
+config ARCH_MSYS
+	bool
+	select CPU_V7
+	select CLOCKSOURCE_MVEBU
 
 #
 # Armada 370 SoC boards
@@ -107,6 +113,23 @@ config MACH_USI_TOPKICK
 	select ARCH_KIRKWOOD
 
 #
+# MSys SoC boards
+#
+
+comment "MSYS based boards"
+
+config MACH_DAGGER
+	bool "Dagger"
+	select ARCH_MSYS
+	help
+	Say Y here if you are using the Westermo Dagger
+
+config BBOX_PLATFORM
+   string
+   default "dagger" if MACH_DAGGER
+   default "mvebu"
+
+#
 # Common options
 #
 
@@ -117,6 +140,7 @@ config MVEBU_CONSOLE_UART
 	range 0 1 if ARCH_ARMADA_XP
 	range 0 3 if ARCH_DOVE
 	range 0 1 if ARCH_KIRKWOOD
+	range 0 1 if ARCH_MSYS
 	help
 	  Select the UART number the barebox console will sit on.
 
