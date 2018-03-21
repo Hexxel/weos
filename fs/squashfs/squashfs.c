@@ -361,6 +361,31 @@ static int squashfs_closedir(struct device_d *dev, DIR *_dir)
 	return 0;
 }
 
+static int squashfs_readlink(struct device_d *dev, const char *filename,
+			     char *buf, size_t bufsz)
+{
+	struct squashfs_priv *priv = dev->priv;
+	struct inode *inode;
+	int err;
+
+	inode = squashfs_findfile(&priv->sb, filename, NULL);
+	if (!inode)
+		return -ENOENT;
+
+	err = squashfs_read_metadata(&priv->sb, buf,
+				     &squashfs_i(inode)->start,
+				     &squashfs_i(inode)->offset,
+				     min((loff_t)bufsz, inode->i_size));
+	if (err)
+		return err;
+
+	buf[min((loff_t)bufsz - 1, inode->i_size)] = '\0';
+
+        free(squashfs_i(inode));
+        return 0;
+}
+
+
 static int squashfs_stat(struct device_d *dev, const char *filename,
 		struct stat *s)
 {
@@ -387,6 +412,7 @@ static struct fs_driver_d squashfs_driver = {
 	.opendir	= squashfs_opendir,
 	.readdir	= squashfs_readdir,
 	.closedir	= squashfs_closedir,
+	.readlink	= squashfs_readlink,
 	.stat		= squashfs_stat,
 	.type		= filetype_squashfs,
 	.drv = {

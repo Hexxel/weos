@@ -54,6 +54,7 @@ static int do_ethact(int argc, char *argv[])
 		return 1;
 	}
 
+	edev->open(edev);
 	return 0;
 }
 

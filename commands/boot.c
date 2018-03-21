@@ -18,6 +18,7 @@
 #include <malloc.h>
 #include <boot.h>
 #include <complete.h>
+#include <init.h>
 
 #include <linux/stat.h>
 
@@ -111,6 +112,13 @@ out:
 
 	return ret;
 }
+
+static int boot_init(void)
+{
+	globalvar_add_simple("boot.default", NULL);
+	return 0;
+}
+late_initcall(boot_init);
 
 BAREBOX_CMD_HELP_START(boot)
 BAREBOX_CMD_HELP_TEXT("This is for booting based on scripts. Unlike the bootm command which")

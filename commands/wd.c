@@ -29,7 +29,7 @@ static int do_wd(int argc, char *argv[])
 		if (isdigit(*argv[1])) {
 			timeout = simple_strtoul(argv[1], NULL, 0);
 		} else {
-			printf("numerical parameter expected\n");
+			pr_err("numerical parameter expected\n");
 			return 1;
 		}
 	}
@@ -38,13 +38,13 @@ static int do_wd(int argc, char *argv[])
 	if (rc < 0) {
 		switch (rc) {
 		case -EINVAL:
-			printf("Timeout value out of range\n");
+			pr_err("Timeout value out of range\n");
 			break;
 		case -ENOSYS:
-			printf("Watchdog cannot be disabled\n");
+			pr_err("Watchdog cannot be disabled\n");
 			break;
 		default:
-			printf("Watchdog fails: '%s'\n", strerror(-rc));
+			pr_err("Watchdog fails: '%s'\n", strerror(-rc));
 			break;
 		}
 

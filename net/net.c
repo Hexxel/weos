@@ -269,7 +269,7 @@ static struct net_connection *net_new(IPaddr_t dest, rx_handler_f *handler,
 		char str[sizeof("xx:xx:xx:xx:xx:xx")];
 		random_ether_addr(edev->ethaddr);
 		ethaddr_to_string(edev->ethaddr, str);
-		printf("warning: No MAC address set. Using random address %s\n", str);
+		pr_warn("warning: No MAC address set. Using random address %s\n", str);
 		eth_set_ethaddr(edev, edev->ethaddr);
 	}
 
@@ -546,6 +546,8 @@ int net_receive(struct eth_device *edev, unsigned char *pkt, int len)
 	int ret;
 
 	led_trigger_network(LED_TRIGGER_NET_RX);
+
+	net_pcap_rx(pkt, len);
 
 	if (len < ETHER_HDR_SIZE) {
 		ret = 0;

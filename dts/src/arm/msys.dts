@@ -1,0 +1,389 @@
+/*
+ * Device Tree file for Marvell xCAT 3 Reference Design board
+ * (RD-FINDOUT)
+ *
+ *  Copied from arch/arm/boot/dts/armada-370-rd.dts
+ *
+ *  Copyright (C) 2014 Westermo Teleindustri AB
+ *
+ * This file is licensed under the terms of the GNU General Public
+ * License version 2.  This program is licensed "as is" without any
+ * warranty of any kind, whether express or implied.
+ */
+
+/dts-v1/;
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/gpio/gpio.h>
+#include "msys.dtsi"
+
+#define ADDR_COMPL(_i) ((_i) << 19)
+
+
+/ {
+	model = "Dagger";
+	compatible = "wmo,Dagger", "marvell,msys", "marvell,armada-370-xp";
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8 earlyprintk";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x20000000>; /* 1024 MB */
+	};
+
+	soc {
+		ranges =
+		<MBUS_ID(0xf0, 0x01) 0 0xf1000000 0x00100000>,	/* Internal regs */
+		<MBUS_ID(0x08, 0x00) 0 0xf6000000 0x00100000>,	/* DFX regs */
+		<MBUS_ID(0x03, 0x00) 0 0x80000000 0x04000000>,	/* Packet processor */
+		<MBUS_ID(0x01, 0x1d) 0 0xfff00000 0x00100000>,	/* BootROM */
+		<MBUS_ID(0x01, 0x2f) 0 0xf0000000 0x01000000>,	/* BootCS */
+		<MBUS_ID(0x01, 0x1e) 1 0xa8000000 0x08000000>,	/* SPI0, CS0 */
+		<MBUS_ID(0x01, 0x5e) 0 0xd4000000 0x04000000>,	/* SPI0, CS1 */
+		<MBUS_ID(0x0a, 0x00) 0 0xb0000000 0x08000000>;	/* PoE Subsystem */
+
+		poe-bus {
+			compatible = "simple-bus";
+			ranges;
+			#address-cells = <2>;
+			#size-cells = <1>;
+
+			/* Dragonite spi bus has 2 spi slaves. Both uses gpio cs.
+			The main flash has gpio 24, cert chip has gpio 28. */
+			poe_spi: spi@b4000000 {
+				compatible = "wmo,drg-spi";
+				reg = <MBUS_ID(0x0a, 0x00) 0x04000000 0x8000>,
+				      <MBUS_ID(0x03, 0x00) 0x0000001c 0x0004>;
+				clocks = <&coreclk 0>;
+				spi-max-frequency = <50000000>;
+				gpios = <&gpio0 24 GPIO_ACTIVE_LOW>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				spi-flash@0 {
+					#address-cells = <1>;
+					#size-cells = <1>;
+					compatible = "jedec,spi-nor";
+					spi-max-frequency = <50000000>;
+					reg = <0>; /* Chip select 0 */
+					m25p,fast-read;
+				};
+
+//                 maxq1061@0 {
+// 					#address-cells = <1>;
+// 					#size-cells = <1>;
+// 					spi-max-frequency = <1000000>;
+// 					reg = <2>; /* Chip select 2 */
+// 				};
+			};
+		};
+
+		internal-regs {
+			serial@12000 {
+				status = "okay";
+			};
+
+			gpio0: gpio@18100 {
+				compatible = "marvell,orion-gpio";
+				reg = <0x18100 0x40>;
+				ngpios = <32>;
+				gpio-controller;
+				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupts = <82>, <83>, <84>, <85>;
+				status = "okay";
+
+				gpio-pin@29 {
+						compatible = "marvell,msys-pinctrl";
+						active_status = "low";
+						gpios = <&gpio0>;
+						pin = <29>;
+				};
+			};
+
+			spi0: spi@10600 {
+				compatible = "marvell,msys-spi";
+				direct-mode = <4>; /* SPI direct mode (0 = disabled, 3 or 4 = 3/4 byte addr */
+				cs-gpios = <0>, <0>;
+				status = "okay";
+
+				spi-flash@0 {
+					#address-cells = <1>;
+					#size-cells = <1>;
+  					compatible = "micron,n25q02", "jedec,spi-nor";
+					spi-max-frequency = <40000000>;
+					reg = <0>; /* Chip select 0 */
+					m25p,fast-read;
+				};
+				
+				fpga-flash@0 {
+					#address-cells = <1>;
+					#size-cells = <1>;
+ 					compatible = "spansion,s25fl128s", "jedec,spi-nor";
+					spi-max-frequency = <1000000>;
+					reg = <1>; /* Chip select 1 */
+				};
+			};
+
+			i2c@11000 {
+				status = "okay";
+
+				eeprom@50 {
+					compatible = "at24,24c02";
+					reg = <0x50>;
+				};
+
+				eeprom@51 {
+					compatible = "24_wmo";
+					reg = <0x51>;
+				};
+
+				fpga-mux@70 {
+					compatible = "wmo,dagger-fpga-mux";
+					reg = <0x70>;
+					mux-reg = <0x0c>;
+					mux-val = <0x0d>;
+				};
+			};
+
+			usb@50000 {
+				status = "okay";
+			};
+		};
+
+		/* External MAX 16002BTC+ GPIO watchdog, does not have x500 timeout */
+		watchdog {
+			compatible = "wmo,dagger-wdt";
+			gpios = <&gpio0 6 GPIO_ACTIVE_LOW>;
+			//hw_algo = "toggle";
+			//hw_margin_ms = <50>;
+			//always-running;
+			auto-start;
+		};
+
+		pcie-controller {
+			status = "okay";
+
+			/* Internal mini-PCIe connector */
+			pcie@1,0 {
+				/* Port 0, Lane 0 */
+				status = "okay";
+			};
+		};
+
+		packet-processor {
+			compatible = "marvell,xcat-3-pp";
+			reg = <MBUS_ID(0x08, 0x00) 0xf800c 4>;
+			controller = <&mg>;
+			interrupt-parent = <&g0intc>;
+			// interrupts = <8 9>; /* TxSDMA, RxSDMA */
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			ranges = <0x00000000 MBUS_ID(0x03, 0x00) ADDR_COMPL(0) 0x80000
+						0x07000000 MBUS_ID(0x03, 0x00) ADDR_COMPL(1) 0x80000
+						0x09000000 MBUS_ID(0x03, 0x00) ADDR_COMPL(2) 0x80000
+						0x12000000 MBUS_ID(0x03, 0x00) ADDR_COMPL(3) 0x80000
+						0x12080000 MBUS_ID(0x03, 0x00) ADDR_COMPL(4) 0x80000
+						0x13000000 MBUS_ID(0x03, 0x00) ADDR_COMPL(5) 0x80000
+
+						/* the last window is dynamically managed by the driver */
+						0x80000000 MBUS_ID(0x03, 0x00) ADDR_COMPL(7) 0x80000>;
+
+			g0intc: xc3-global-intc@30 {
+				compatible = "marvell,orion-bridge-intc";
+				interrupt-controller;
+				#interrupt-cells = <1>;
+				reg = <0x30 0x8>;
+				interrupt-parent = <&mpic>;
+				interrupts = <33>;
+			};
+
+			mg: management-unit@0 {
+				compatible = "marvell,xcat-3-mg";
+				reg = <0 0x6b8 0x2600 0x300 0x80000000 0x80000>;
+				// interrupts = <9 8>; /* Rx Tx */
+			};
+
+			serdes: serdes-unit@0 {
+				compatible = "marvell,xcat-3-serdes";
+				reg = <0x13000000 0x100 0x13000800 0x800>;
+         };
+
+			smi0: mdio@07004054 {
+				compatible = "marvell,xcat-3-mdio";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reg = <0x07004054 4 0x07004200 4>;
+				clocks = <&gateclk 4>;
+			};
+
+			smi1: mdio@09004054 {
+				compatible = "marvell,xcat-3-mdio";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reg = <0x09004054 4 0x09004200 4>;
+				clocks = <&gateclk 3>;
+			};
+
+			xsmi0: mdio@040000 {
+				compatible = "marvell,xcat-3-xsmi-mdio";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reg = <0x00040000 8>;
+				clocks = <&gateclk 3>;
+			};
+
+			ethernet@0 {
+				compatible = "marvell,xcat-3-gbe-mac";
+				reg = <0x12000000 0x100000 0x2600 0x300>;
+				phy,mii-bus = <&smi0 &smi1 &xsmi0>;
+			};
+		};
+	};
+};
+
+&smi0 {
+	/* phy0:  MARVELL_PONCAT_PHY_SFP(4, 0); */
+	phy0:  ethernet-phy@4 {
+		reg = <0x4>;
+		/* page reg mask val_bits */
+ 		marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;
+		led-0 = "green:link";
+		led-1 = "yellow:state";
+	};
+	phy1:  ethernet-phy@5 {
+		reg = <0x5>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;
+		led-0 = "green:link";
+		led-1 = "yellow:state";
+	};
+	phy2:  ethernet-phy@6 {
+		reg = <0x6>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;
+		led-0 = "green:link";
+		led-1 = "yellow:state";
+	};
+	phy3:  ethernet-phy@7 {
+		reg = <0x7>;
+		/* page reg mask val_bits */
+ 		marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;
+		led-0 = "green:link";
+		led-1 = "yellow:state";
+	};
+	phy4:  ethernet-phy@8 {
+		reg = <0x8>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;
+		led-0 = "green:link";
+		led-1 = "yellow:state";
+	};
+	phy5:  ethernet-phy@9 {
+		reg = <0x9>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;
+		led-0 = "green:link";
+		led-1 = "yellow:state";
+	};
+	phy6:  ethernet-phy@a {
+		reg = <0xa>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;
+		led-0 = "green:link";
+		led-1 = "yellow:state";
+	};
+	phy7:  ethernet-phy@b {
+		reg = <0xb>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;
+		led-0 = "green:link";
+		led-1 = "yellow:state";
+	};
+
+	phy8:  ethernet-phy@c { reg = <0xc>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy9:  ethernet-phy@d { reg = <0xd>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy10: ethernet-phy@e { reg = <0xe>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy11: ethernet-phy@f { reg = <0xf>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+};
+
+&smi1 {
+	phy12: ethernet-phy@4 { reg = <0x4>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy13: ethernet-phy@5 { reg = <0x5>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy14: ethernet-phy@6 { reg = <0x6>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy15: ethernet-phy@7 { reg = <0x7>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+
+	phy16: ethernet-phy@8 { reg = <0x8>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy17: ethernet-phy@9 { reg = <0x9>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy18: ethernet-phy@a { reg = <0xa>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy19: ethernet-phy@b { reg = <0xb>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+
+	phy20: ethernet-phy@c { reg = <0xc>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy21: ethernet-phy@d { reg = <0xd>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy22: ethernet-phy@e { reg = <0xe>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+	phy23: ethernet-phy@f { reg = <0xf>; marvell,reg-init = <0x3 0x10 0x1 0x8881>, <0x4 0x1b 0 0x3e80>;};
+};
+
+&xsmi0 {
+	/*
+		The phys 24, 25 are connected in pairs to create one SGMII channel. Phy24 is
+		connected to the MAC on the PC3 port 24, Phy25 is connected to media side (RJ45/SFP).
+		r20:p18 is setup to using mode SGMII(system) to QSGMII(media),
+		the QSGMII r0:p4 is using autoneg, r27:p4 uses loopback mode and crossover between phy24 and 25.
+	*/
+	phy24: ethernet-phy@4 {
+		reg = <0x4>;
+		/* page reg mask val_bits.*/
+		marvell,reg-init = <0x12 0x14 0 0x8385>, <0x4 0 0 0x9140>, <0x4 0x1b 0 0x7f83>, <0x4 0x1b 0 0x3e80>;
+	};
+	/* see phy24 above.*/
+	phy26: ethernet-phy@6 {
+		reg = <0x6>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x12 0x14 0 0x8385>, <0x4 0 0 0x9140>, <0x4 0x1b 0 0x7f83>, <0x4 0x1b 0 0x3e80>;
+	};
+	/* see phy24 above.*/
+	phy28: ethernet-phy@8 {
+		reg = <0x8>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x12 0x14 0 0x8385>, <0x4 0 0 0x9140>, <0x4 0x1b 0 0x7f83>, <0x4 0x1b 0 0x3e80>;
+	};
+	/* see phy24 above.*/
+	phy30: ethernet-phy@a {
+		reg = <0xa>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x12 0x14 0 0x8385>, <0x4 0 0 0x9140>, <0x4 0x1b 0 0x7f83>, <0x4 0x1b 0 0x3e80>;
+	};
+
+	/*
+		Phy25 is working in pairs with phy24, see above.
+		r20:p18 is setup to using mode QSGMII(system mode) to auto media detect Copper/1000BASE-X.
+		r16:p3 setups the LED0 to On-link blink activity off-no link all other LEDs to forced off.
+	*/
+	phy25: ethernet-phy@5{
+		reg = <0x5>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x12 0x14 0 0x8387>, <0x4 0 0 0x9140>, <0x3 0x10 0 0x8881>, <0x4 0x1b 0 0x3e80>;
+	};
+	/* see phy25 above.*/
+	phy27: ethernet-phy@7 {
+		reg = <0x7>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x12 0x14 0 0x8387>, <0x4 0 0 0x9140>, <0x3 0x10 0 0x8881>, <0x4 0x1b 0 0x3e80>;
+	};
+	/* see phy25 above.*/
+	phy29: ethernet-phy@9{
+		reg = <0x9>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x12 0x14 0 0x8387>, <0x4 0 0 0x9140>, <0x3 0x10 0 0x8881>, <0x4 0x1b 0 0x3e80>;
+	};
+	/* see phy25 above.*/
+	phy31: ethernet-phy@b {
+		reg = <0xb>;
+		/* page reg mask val_bits */
+		marvell,reg-init = <0x12 0x14 0 0x8387>, <0x4 0 0 0x9140>, <0x3 0x10 0 0x8881>, <0x4 0x1b 0 0x3e80>;
+	};
+};

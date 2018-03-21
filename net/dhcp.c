@@ -25,28 +25,6 @@
 
 #define OPT_SIZE 312	/* Minimum DHCP Options size per RFC2131 - results in 576 byte pkt */
 
-struct bootp {
-	uint8_t		bp_op;		/* Operation				*/
-#define OP_BOOTREQUEST	1
-#define OP_BOOTREPLY	2
-	uint8_t		bp_htype;	/* Hardware type			*/
-#define HWT_ETHER	1
-	uint8_t		bp_hlen;	/* Hardware address length		*/
-#define HWL_ETHER	6
-	uint8_t		bp_hops;	/* Hop count (gateway thing)		*/
-	uint32_t	bp_id;		/* Transaction ID			*/
-	uint16_t	bp_secs;	/* Seconds since boot			*/
-	uint16_t	bp_spare1;	/* Alignment				*/
-	IPaddr_t	bp_ciaddr;	/* Client IP address			*/
-	IPaddr_t	bp_yiaddr;	/* Your (client) IP address		*/
-	IPaddr_t	bp_siaddr;	/* Server IP address			*/
-	IPaddr_t	bp_giaddr;	/* Gateway IP address			*/
-	uint8_t		bp_chaddr[16];	/* Client hardware address		*/
-	char		bp_sname[64];	/* Server host name			*/
-	char		bp_file[128];	/* Boot file name			*/
-	char		bp_vend[0];	/* Vendor information			*/
-};
-
 /* DHCP States */
 typedef enum {
 	INIT,
@@ -66,11 +44,6 @@ typedef enum {
 #define DHCP_ACK      5
 #define DHCP_NAK      6
 #define DHCP_RELEASE  7
-
-#define BOOTP_VENDOR_MAGIC	0x63825363	/* RFC1048 Magic Cookie		*/
-
-#define PORT_BOOTPS	67		/* BOOTP server UDP port		*/
-#define PORT_BOOTPC	68		/* BOOTP client UDP port		*/
 
 #define DHCP_MIN_EXT_LEN 64	/* minimal length of extension list	*/
 
@@ -337,20 +310,20 @@ static int bootp_check_packet(unsigned char *pkt, unsigned src, unsigned len)
 	struct bootp *bp = (struct bootp *) pkt;
 	int retval = 0;
 
-	if (src != PORT_BOOTPS)
+	if (src != BOOTP_PORT_PS)
 		retval = -1;
 	else if (len < sizeof(struct bootp))
 		retval = -2;
-	else if (bp->bp_op != OP_BOOTREQUEST &&
-	    bp->bp_op != OP_BOOTREPLY &&
-	    bp->bp_op != DHCP_OFFER &&
+	else if (bp->bp_op != BOOTP_OP_REQUEST &&
+	    bp->bp_op != BOOTP_OP_REPLY &&
+		bp->bp_op != DHCP_OFFER &&
 	    bp->bp_op != DHCP_ACK &&
 	    bp->bp_op != DHCP_NAK ) {
 		retval = -3;
 	}
-	else if (bp->bp_htype != HWT_ETHER)
+	else if (bp->bp_htype != BOOTP_HWT_ETHER)
 		retval = -4;
-	else if (bp->bp_hlen != HWL_ETHER)
+	else if (bp->bp_hlen != BOOTP_HWL_ETHER)
 		retval = -5;
 	else if (net_read_uint32(&bp->bp_id) != Bootp_id) {
 		retval = -6;
@@ -454,9 +427,9 @@ static int bootp_request(void)
 	debug("BOOTP broadcast\n");
 
 	bp = (struct bootp *)payload;
-	bp->bp_op = OP_BOOTREQUEST;
-	bp->bp_htype = HWT_ETHER;
-	bp->bp_hlen = HWL_ETHER;
+	bp->bp_op = BOOTP_OP_REQUEST;
+	bp->bp_htype = BOOTP_HWT_ETHER;
+	bp->bp_hlen = BOOTP_HWL_ETHER;
 	bp->bp_hops = 0;
 	bp->bp_secs = htons(get_time_ns() >> 30);
 	net_write_ip(&bp->bp_ciaddr, 0);
@@ -541,9 +514,9 @@ static void dhcp_send_request_packet(struct bootp *bp_offer)
 	debug("%s: Sending DHCPREQUEST\n", __func__);
 
 	bp = (struct bootp *)payload;
-	bp->bp_op = OP_BOOTREQUEST;
-	bp->bp_htype = HWT_ETHER;
-	bp->bp_hlen = HWL_ETHER;
+	bp->bp_op = BOOTP_OP_REQUEST;
+	bp->bp_htype = BOOTP_HWT_ETHER;
+	bp->bp_hlen = BOOTP_HWL_ETHER;
 	bp->bp_hops = 0;
 	bp->bp_secs = htons(get_time_ns() >> 30);
 
@@ -619,7 +592,7 @@ static void dhcp_handler(void *ctx, char *packet, unsigned int len)
 			bootp_copy_net_params(bp); /* Store net params from reply */
 			dhcp_state = BOUND;
 			ip = net_get_ip();
-			printf("DHCP client bound to address %pI4\n", &ip);
+			pr_info("DHCP client bound to address %pI4\n", &ip);
 			return;
 		}
 		break;
@@ -658,16 +631,18 @@ int dhcp(int retries, struct dhcp_req_param *param)
 	dhcp_set_param_data(DHCP_USER_CLASS, param->user_class);
 	dhcp_set_param_data(DHCP_CLIENT_UUID, param->client_uuid);
 
-	if (!retries)
+	if (!retries) {
+		pr_info("retries is set to zero, set it to %d\n", DHCP_DEFAULT_RETRY);
 		retries = DHCP_DEFAULT_RETRY;
+	}
 
-	dhcp_con = net_udp_new(0xffffffff, PORT_BOOTPS, dhcp_handler, NULL);
+	dhcp_con = net_udp_new(0xffffffff, BOOTP_PORT_PS, dhcp_handler, NULL);
 	if (IS_ERR(dhcp_con)) {
 		ret = PTR_ERR(dhcp_con);
 		goto out;
 	}
 
-	ret = net_udp_bind(dhcp_con, PORT_BOOTPC);
+	ret = net_udp_bind(dhcp_con, BOOTP_PORT_PC);
 	if (ret)
 		goto out1;
 
@@ -690,7 +665,7 @@ int dhcp(int retries, struct dhcp_req_param *param)
 		net_poll();
 		if (is_timeout(dhcp_start, 3 * SECOND)) {
 			dhcp_start = get_time_ns();
-			printf("T ");
+			pr_info("T ");
 			ret = bootp_request();
 			/* no need to check if retries > 0 as we check if != 0 */
 			retries--;
@@ -709,7 +684,7 @@ out1:
 	net_unregister(dhcp_con);
 out:
 	if (ret)
-		debug("dhcp failed: %s\n", strerror(-ret));
+		pr_err("dhcp failed: %s\n", strerror(-ret));
 
 	return ret;
 }

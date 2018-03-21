@@ -1,0 +1,128 @@
+
+#include <common.h>
+#include <command.h>
+#include <getopt.h>
+
+#include <linux/phy.h>
+
+static char *rmon_strings[] = {
+	"InGoodOctetsLo",
+	"InGoodOctetsHi",
+	"InBadOctets",
+	"OutFCSErr",
+	"InUnicast",
+	"Deferred",
+	"InBroadcasts",
+	"InMulticasts",
+	"64Octets",
+	"65to127Octets",
+	"128to256Octets",
+	"256to511Octets",
+	"512to1023Octets",
+	"MaxOctets",
+	"OutOctetsLo",
+	"OutOctetsHi",
+	"OutUnicast",
+	"Excessive",
+	"OutMulticasts",
+	"OutBroadcasts",
+	"Single",
+	"OutPause",
+	"InPause",
+	"Multiple",
+	"InUndersize",
+	"InFragments",
+	"InOversize",
+	"InJabber",
+	"InRxErr",
+	"InFCSErr",
+	"Collisions",
+	"Late"
+};
+
+
+enum mvops {
+	MV_NONE,
+	MV_RMON_FLUSH,
+	MV_RMON_DUMP,
+	MV_ATU,
+	MV_VTU,
+};
+
+static int do_rmon_op (struct mii_bus *bus, int port, enum mvops op)
+{
+	int i = 0;
+
+	for (; i <= 0x1f; i++) {
+		uint16_t val = 1 << 15 | (0x3 << 10) | port << 5;
+
+		if (op == MV_RMON_DUMP)
+			val |= (0x5 << 12);
+		else if (op == MV_RMON_FLUSH)
+			val |= (0x2 << 12);
+		else
+			return 1;
+	
+		mdiobus_write(bus, 0x1b, 0x1d, val);
+		while (mdiobus_read(bus, 0x1b, 0x1d) & 0x8000);
+
+		if (op == MV_RMON_DUMP) {
+			val = 1 << 15 | (0x4 << 12) | (0x3 << 10) | port << 5;
+			mdiobus_write(bus, 0x1b, 0x1d, val | i);
+			while (mdiobus_read(bus, 0x1b, 0x1d) & 0x8000);
+		
+			pr_err("%s: %d\n", rmon_strings[i], mdiobus_read(bus, 0x1b, 0x1f) | mdiobus_read(bus, 0x1b, 0x1e) << 16);
+		}
+	}
+	return 0;
+}
+
+static int do_mvcfg(int argc, char *argv[])
+{
+	struct mii_bus *bus;
+	char *bus_name = NULL;
+	int port, opt;
+	enum mvops op;
+	
+   	while ((opt = getopt(argc, argv, "b:r:")) > 0) {
+		switch (opt) {
+		case 'b':
+			bus_name = optarg;
+			break;
+
+		case 'r':
+			if (!strcmp(optarg, "flush"))
+				op = MV_RMON_FLUSH;
+			else if (!strcmp(optarg, "dump"))
+				op = MV_RMON_DUMP;
+			else
+				return COMMAND_ERROR_USAGE;
+
+			port = simple_strtol(argv[optind], NULL, 0);
+			port++;
+			break;
+			
+		default:
+			return COMMAND_ERROR_USAGE;
+		}
+	}
+
+	if (!bus_name || !op)
+		return COMMAND_ERROR_USAGE;
+
+	for_each_mii_bus(bus) {
+		if (!bus_name || !strcmp(bus_name, dev_name(&bus->dev)) ||
+		    !strcmp(bus_name, dev_name(bus->parent))) {
+			if (op == MV_RMON_DUMP || op == MV_RMON_FLUSH)
+				return do_rmon_op(bus, port, op);
+		}
+	}
+	return -ENODEV;
+}
+
+BAREBOX_CMD_START(mvcfg)
+	.cmd		= do_mvcfg,
+	BAREBOX_CMD_DESC("Control a Marvel SOHO chip.")
+	BAREBOX_CMD_OPTS("-b <miibus> -r <dump|flush> port")
+	BAREBOX_CMD_GROUP(CMD_GRP_NET)
+BAREBOX_CMD_END

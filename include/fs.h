@@ -134,6 +134,7 @@ void *memmap(int fd, int flags);
 
 #define FILESIZE_MAX	((loff_t)-1)
 
+#define MAP_FAILED      ((void *)-1)
 #define PROT_READ	1
 #define PROT_WRITE	2
 

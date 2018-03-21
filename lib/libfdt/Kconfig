@@ -1,0 +1,2 @@
+config LIBFDT
+       bool "include flattened device tree support"

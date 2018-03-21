@@ -1,0 +1,3 @@
+#define QMAN_ADDR 0xfe318000
+#define BMAN_ADDR 0xfe31a000
+#define FMAN_ADDR 0xfe400000

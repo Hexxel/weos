@@ -8,7 +8,8 @@
 
 #if defined CONFIG_X86 || \
 	defined CONFIG_ARCH_EP93XX || \
-	defined CONFIG_ARCH_ZYNQ
+	defined CONFIG_ARCH_ZYNQ || \
+	defined CONFIG_ARCH_MVEBU
 #include <mach/barebox.lds.h>
 #endif
 

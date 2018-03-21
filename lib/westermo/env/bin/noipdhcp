@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# do not advertize any staticly configured ip as source when sending
+# the DHCP discover, but save it so that it can be restored if DHCP
+# fails.
+oldip=$eth0.ipaddr
+eth0.ipaddr="0.0.0.0"
+
+dhcp
+err=$?
+
+# if there was an error, revert to the old ip
+if [ $err -ne 0 ]; then
+    eth0.ipaddr=$oldip
+fi
+
+exit $err

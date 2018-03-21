@@ -39,6 +39,7 @@
 #include <io.h>
 #include <errno.h>
 #include <progress.h>
+#include <fs.h>
 #include <linux/err.h>
 #include <asm/unaligned.h>
 #include <linux/mtd/concat.h>
@@ -894,6 +895,17 @@ int flash_isset(struct flash_info *info, flash_sect_t sect,
 	return retval;
 }
 
+static int cfi_mtd_memmap(struct mtd_info *mtd, void **map, int flags)
+{
+	struct flash_info *info = container_of(mtd, struct flash_info, mtd);
+
+	if (flags & PROT_WRITE)
+		return -EINVAL;
+
+	*map = info->base;
+	return 0;
+}
+
 static int cfi_mtd_read(struct mtd_info *mtd, loff_t from, size_t len,
 		size_t *retlen, u8 *buf)
 {
@@ -940,6 +952,7 @@ static void cfi_init_mtd(struct flash_info *info)
 	u32 erasesize;
 	int i;
 
+	mtd->memmap = cfi_mtd_memmap;
 	mtd->read = cfi_mtd_read;
 	mtd->write = cfi_mtd_write;
 	mtd->erase = cfi_mtd_erase;

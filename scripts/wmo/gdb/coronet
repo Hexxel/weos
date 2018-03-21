@@ -1,0 +1,23 @@
+set print pretty on
+
+# Connect to BDI3k and load image into RAM.
+target remote 198.18.254.201:2001
+load barebox
+
+# Once the code has been relocated to top-of-ram, no
+# symbol->address mappings will be correct. Comment the
+# following lines if you want to debug very early code,
+# i.e. before relocate_code has run.
+set $ram_sz = 0x20000000
+set $end_of_bss = *((unsigned long *)_GOT2_TABLE_ + 8)
+set $smp_area_sz = 0x1000
+set $ram_text_base = $ram_sz - $end_of_bss - $smp_area_sz
+symbol-file
+add-symbol-file barebox $ram_text_base
+
+# Add any initial breakpoints here
+# break start_barebox
+# b pca953x_probe
+# b gpiochip_add
+continue
+continue

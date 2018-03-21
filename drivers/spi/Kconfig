@@ -18,6 +18,10 @@ config DRIVER_SPI_ATMEL
 	bool "Atmel (AT91) SPI Master driver"
 	depends on ARCH_AT91
 
+config DRIVER_SPI_DRG
+	bool "Westermo Dragonite SPI Master driver"
+	depends on ARCH_MSYS
+
 config DRIVER_SPI_GPIO
 	bool "GPIO SPI Master driver"
 	depends on GPIOLIB
@@ -48,7 +52,7 @@ config DRIVER_SPI_MXS
 
 config DRIVER_SPI_MVEBU
 	bool "Marvell MVEBU SoC SPI master driver"
-	depends on ARCH_ARMADA_370 || ARCH_ARMADA_XP || ARCH_DOVE || ARCH_KIRKWOOD
+	depends on ARCH_ARMADA_370 || ARCH_ARMADA_XP || ARCH_DOVE || ARCH_KIRKWOOD || ARCH_MSYS
 
 config DRIVER_SPI_OMAP3
 	bool "OMAP3 McSPI Master driver"

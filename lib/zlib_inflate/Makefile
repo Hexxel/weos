@@ -15,4 +15,4 @@
 
 obj-$(CONFIG_ZLIB) += zlib_inflate.o
 
-zlib_inflate-objs := inffast.o inflate.o inftrees.o
+zlib_inflate-objs := inffast.o inflate.o inftrees.o infutil.o

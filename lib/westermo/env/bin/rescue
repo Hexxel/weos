@@ -1,0 +1,70 @@
+#!/bin/sh
+
+echo "You will now be guided through the process of downloading and booting"
+echo "a recovery image using TFTP."
+echo
+
+if yes "Do you wish to accquire network configuration using DHCP/BOOTP?" y; then
+    noipdhcp
+elif [ $? -eq 2 ]; then
+    exit
+fi
+
+echo
+echo "The current IP address is $eth0.ipaddr"
+if yes "Do you wish to change the address?" n; then
+    readline "Enter the new IP address:" eth0.ipaddr
+elif [ $? -eq 2 ]; then
+    exit
+fi
+
+echo
+echo "The current netmask is $eth0.netmask"
+if yes "Do you wish to change the netmask?" n; then
+    readline "Enter the new netmask:" eth0.netmask
+elif [ $? -eq 2 ]; then
+    exit
+fi
+
+echo
+echo "The current TFTP server address is $eth0.serverip"
+if yes "Do you wish to change the address?" n; then
+    readline "Enter new TFTP server address:" eth0.serverip
+elif [ $? -eq 2 ]; then
+    exit
+fi
+
+mkdir /mnt/rescue
+mount -t tftp $eth0.serverip /mnt/rescue
+if [ $? -ne 0 ]; then
+    rmdir /mnt/rescue
+    echo "Unable reach TFTP server"
+    sleep 3
+    exit
+fi
+
+echo
+false
+while [ $? -ne 0 ]; do
+    readline "Enter filename:" file
+    if [ $? -ne 0 ]; then
+	umount /mnt/rescue
+	rmdir  /mnt/rescue
+	exit
+    fi
+
+    echo "Downloading $file"
+    cp /mnt/rescue/$file /dev/ramload
+done
+
+umount /mnt/rescue
+rmdir  /mnt/rescue
+
+echo
+echo "The image will now be booted, remember to perform a standard device"
+echo "upgrade in order to restore the device."
+
+echo
+echo -n "Loading volatile rescue image .............................. "
+wmoboot /dev/ramload
+echo -e "\e[;1m[FAIL]\e[0m"

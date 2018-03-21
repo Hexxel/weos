@@ -1,6 +1,6 @@
 /*
  * Address map functions for Marvell EBU SoCs (Kirkwood, Armada
- * 370/XP, Dove, Orion5x and MV78xx0)
+ * 370/XP, MSys, Dove, Orion5x and MV78xx0)
  *
  * Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
  *
@@ -284,6 +284,7 @@ static int mvebu_mbus_alloc_window(struct mvebu_mbus_state *mbus,
 {
 	int win;
 
+
 	if (remap == MVEBU_MBUS_NO_REMAP) {
 		for (win = mbus->soc->num_remappable_wins;
 		     win < mbus->soc->num_wins; win++)
@@ -320,6 +321,14 @@ static unsigned int armada_370_xp_mbus_win_offset(int win)
 	 *   windows, with only 2 registers of 32 bits per window
 	 *   (ctrl, base).
 	 */
+	if (win < 8)
+		return win << 4;
+	else
+		return 0x90 + ((win - 8) << 3);
+}
+
+static unsigned int msys_mbus_win_offset(int win)
+{
 	if (win < 8)
 		return win << 4;
 	else
@@ -408,6 +417,14 @@ armada_370_xp_mbus_data __maybe_unused = {
 };
 
 static const struct mvebu_mbus_soc_data
+msys_mbus_data __maybe_unused = {
+	.num_wins            = 20,
+	.num_remappable_wins = 8,
+ 	.win_cfg_offset      = msys_mbus_win_offset,
+	.setup_cpu_target    = mvebu_mbus_default_setup_cpu_target,
+};
+
+static const struct mvebu_mbus_soc_data
 dove_mbus_data __maybe_unused = {
 	.num_wins            = 8,
 	.num_remappable_wins = 4,
@@ -457,6 +474,12 @@ static struct of_device_id mvebu_mbus_dt_ids[] = {
 	  .data = &armada_370_xp_mbus_data, },
 	{ .compatible = "marvell,armadaxp-mbus",
 	  .data = &armada_370_xp_mbus_data, },
+#endif
+#if defined(CONFIG_ARCH_MSYS)
+	{ .compatible = "marvell,msys-mbus",
+	  .data = &msys_mbus_data, },
+	{ .compatible = "marvell,msys-mbus",
+	  .data = &msys_mbus_data, },
 #endif
 #if defined(CONFIG_ARCH_DOVE)
 	{ .compatible = "marvell,dove-mbus",
@@ -552,7 +575,7 @@ void mvebu_mbus_get_pcie_io_aperture(struct resource *res)
 #define ATTR(id)   (((id) & 0x00FF0000) >> 16)
 
 static int mbus_dt_setup_win(struct mvebu_mbus_state *mbus,
-			     u32 base, u32 size, u8 target, u8 attr)
+			     u32 base, u32 size, u32 remap, u8 target, u8 attr)
 {
 	if (!mvebu_mbus_window_conflicts(mbus, base, size, target, attr)) {
 		pr_err("cannot add window '%04x:%04x', conflicts with another window\n",
@@ -560,7 +583,7 @@ static int mbus_dt_setup_win(struct mvebu_mbus_state *mbus,
 		return -EBUSY;
 	}
 
-	if (mvebu_mbus_alloc_window(mbus, base, size, MVEBU_MBUS_NO_REMAP,
+	if (mvebu_mbus_alloc_window(mbus, base, size, remap/*MVEBU_MBUS_NO_REMAP*/,
 				    target, attr)) {
 		pr_err("cannot add window '%04x:%04x', too many windows\n",
 		       target, attr);
@@ -618,7 +641,7 @@ static int mbus_dt_setup(struct mvebu_mbus_state *mbus)
 		return ret;
 
 	for (i = 0, r = ranges_start; r < ranges_end; r += cell_count, i++) {
-		u32 windowid, base, size;
+		u32 windowid, base, size, remap;
 		u8 target, attr;
 
 		/*
@@ -633,9 +656,14 @@ static int mbus_dt_setup(struct mvebu_mbus_state *mbus)
 		attr = ATTR(windowid);
 
 		base = of_read_number(r + c_addr_cells, addr_cells);
-		size = of_read_number(r + c_addr_cells + addr_cells,
-				      c_size_cells);
-		ret = mbus_dt_setup_win(mbus, base, size, target, attr);
+		remap = of_read_number(r + c_addr_cells - 1, addr_cells);
+		size = of_read_number(r + c_addr_cells + addr_cells, c_size_cells);
+// pr_info("%s  base = 0x%.8x, remap = 0x%.8x, size = 0x%.8x, target = 0x%.2x, attr = 0x%.2x\n", __func__, base, remap, size, target, attr);
+// 		ret = mbus_dt_setup_win(mbus, base, size, target, attr);
+		if (remap)
+			ret = mbus_dt_setup_win(mbus, base, size, remap & 0xffff0000, target, attr);
+		else
+			ret = mbus_dt_setup_win(mbus, base, size, MVEBU_MBUS_NO_REMAP, target, attr);
 		if (ret < 0)
 			return ret;
 	}

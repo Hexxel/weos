@@ -29,7 +29,7 @@ static int do_saveenv(int argc, char *argv[])
 	unsigned envfs_flags = 0;
 	char *filename = NULL, *dirname = NULL;
 
-	printf("saving environment\n");
+	pr_info("saving environment\n");
 	while ((opt = getopt(argc, argv, "z")) > 0) {
 		switch (opt) {
 		case 'z':

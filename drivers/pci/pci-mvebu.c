@@ -381,7 +381,14 @@ static struct mvebu_pcie_ops __maybe_unused armada_xp_ops = {
 	.phy_setup = armada_xp_phy_setup,
 };
 
+static struct mvebu_pcie_ops __maybe_unused msys_ops = {
+	.phy_setup = msys_phy_setup,
+};
+
 static struct of_device_id mvebu_pcie_dt_ids[] = {
+#if defined(CONFIG_ARCH_MSYS)
+	{ .compatible = "marvell,msys-pcie", .data = &msys_ops, },
+#endif
 #if defined(CONFIG_ARCH_ARMADA_XP)
 	{ .compatible = "marvell,armada-xp-pcie", .data = &armada_xp_ops, },
 #endif

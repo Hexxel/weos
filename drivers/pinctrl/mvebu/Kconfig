@@ -13,3 +13,8 @@ config PINCTRL_DOVE
 config PINCTRL_KIRKWOOD
 	bool
 	default y if ARCH_KIRKWOOD
+
+config PINCTRL_MSYS
+	bool
+	default y if ARCH_MSYS
+

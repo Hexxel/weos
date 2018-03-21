@@ -67,6 +67,18 @@ pblx-$(CONFIG_MACH_PLATHOME_OPENBLOCKS_AX3) += start_plathome_openblocks_ax3
 image-$(CONFIG_MACH_PLATHOME_OPENBLOCKS_AX3) += barebox-plathome-openblocks-ax3.img
 image-$(CONFIG_MACH_PLATHOME_OPENBLOCKS_AX3) += barebox-plathome-openblocks-ax3-2nd.img
 
+# ----------------------- MSYS based boards ---------------------------
+DAGGER_KWBOPTS = ${KWBOPTS} -i $(board)/dagger/kwbimage.cfg
+OPTS_start_dagger.pblx.kwbimg = $(DAGGER_KWBOPTS)
+OPTS_start_dagger.pblx.kwbuartimg = -m uart $(DAGGER_KWBOPTS)
+FILE_barebox-dagger.img   = start_dagger.pblx.kwbimg
+FILE_barebox-dagger-uart.img = start_dagger.pblx.kwbuartimg
+FILE_barebox-dagger-2nd.img = start_dagger.pblx
+pblx-$(CONFIG_MACH_DAGGER) += start_marvell_msys
+image-$(CONFIG_MACH_DAGGER) += barebox-dagger.img
+#image-$(CONFIG_MACH_DAGGER) += barebox-dagger-uart.img
+image-$(CONFIG_MACH_DAGGER) += barebox-dagger-2nd.img
+
 # ----------------------- Dove 88AP510 based boards ---------------------------
 SOLIDRUN_CUBOX_KWBOPTS = ${KWBOPTS} -i $(board)/solidrun-cubox/kwbimage.cfg
 OPTS_start_solidrun_cubox.pblx.kwbimg = $(SOLIDRUN_CUBOX_KWBOPTS)

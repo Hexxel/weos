@@ -46,6 +46,12 @@ config WATCHDOG_OMAP
 	help
 	  Add support for watchdog on the TI OMAP SoC.
 
+config WATCHDOG_DAGGER
+	bool "Westermo Dagger"
+	depends on ARCH_MSYS
+	help
+	  Add support for watchdog on the Westermo Dagger platform.
+
 config WATCHDOG_ORION
 	bool "Watchdog for Armada XP"
 	depends on ARCH_ARMADA_XP

@@ -1,0 +1,24 @@
+#!/bin/sh
+
+global dhcp.client_id="$global.hostname"
+
+if [ ! -e /env/etc/net/static ]; then
+    noipdhcp
+fi
+
+server="$global.dhcp.tftp_server_name"
+if [ -z $server ]; then
+	server="$eth0.serverip"
+
+	if [ -z $server ]; then
+		server="$eth0.gateway"
+
+		if [ -z $server ]; then
+			echo "WARNING no TFTP server found"
+			exit
+		fi;
+	fi;
+fi;
+
+umount /mnt/tftp
+mount $server /mnt/tftp -t tftp

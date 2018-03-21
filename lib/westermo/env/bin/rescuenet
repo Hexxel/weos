@@ -1,0 +1,8 @@
+#!/bin/sh
+
+echo -n "Starting netconsole ........................................ "
+readf /env/etc/rescue/peer  cs1.ip
+readf /env/etc/rescue/port  cs1.port
+echo -e "\e[;1m[ OK ]\e[0m"
+
+echo -e "\nPlease login to perform a system recovery\n"

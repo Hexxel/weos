@@ -1907,6 +1907,16 @@ const char *of_get_model(void)
 	return of_model;
 }
 
+struct device_node *of_get_chosen(struct device_node *root)
+{
+	struct device_node *node = of_find_node_by_path_from(root, "/chosen");
+
+	if (node)
+		return node;
+
+	return of_create_node(root, "/chosen");
+}
+
 const struct of_device_id of_default_bus_match_table[] = {
 	{
 		.compatible = "simple-bus",
@@ -2084,7 +2094,7 @@ int of_add_initrd(struct device_node *root, resource_size_t start,
 	struct device_node *chosen;
 	__be32 buf[2];
 
-	chosen = of_create_node(root, "/chosen");
+	chosen = of_get_chosen(root);
 	if (!chosen)
 		return -ENOMEM;
 

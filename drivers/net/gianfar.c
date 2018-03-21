@@ -545,6 +545,12 @@ static struct driver_d gfar_eth_driver = {
 };
 device_platform_driver(gfar_eth_driver);
 
+static void gfar_phy_remove(struct device_d *dev)
+{
+	struct gfar_phy *phy = dev->priv;
+	mdiobus_unregister(&phy->miibus);
+}
+
 static int gfar_phy_probe(struct device_d *dev)
 {
 	struct gfar_phy *phy;
@@ -573,6 +579,7 @@ static int gfar_phy_probe(struct device_d *dev)
 static struct driver_d gfar_phy_driver = {
 	.name  = "gfar-mdio",
 	.probe = gfar_phy_probe,
+	.remove = gfar_phy_remove,
 };
 register_driver_macro(coredevice, platform, gfar_phy_driver);
 

@@ -179,7 +179,13 @@ static int imx27_ccm_probe(struct device_d *dev)
 			base + CCM_PCCR1);
 
 	clks[dummy] = clk_fixed("dummy", 0);
+#ifdef CONFIG_MACH_BASIS
+	/* Westermo special! We are using 25MHz clock instead of 26Mhz that is
+	 * used by the reference design. */
+	clks[ckih] = clk_fixed("ckih", 25000000);
+#else
 	clks[ckih] = clk_fixed("ckih", 26000000);
+#endif
 	clks[ckil] = clk_fixed("ckil", 32768);
 	clks[fpm] = imx_clk_fixed_factor("fpm", "ckil", 1024, 1);
 	clks[ckih_div1p5] = imx_clk_fixed_factor("ckih_div1p5", "ckih", 2, 3);

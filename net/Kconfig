@@ -23,6 +23,14 @@ config NET_IFUP
 	depends on !SHELL_NONE
 	bool
 
+config NET_PCAP
+	bool
+	prompt "pcap support"
+	help
+	  A lightweight network analyser, similar to tcpdump. Supports live
+	  and background captures. Background captures are saved in libpcap
+	  format, compatible with tcpdump and Wireshark.
+
 config NET_DHCP
 	bool
 	prompt "dhcp support"

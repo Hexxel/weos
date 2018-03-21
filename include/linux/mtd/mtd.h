@@ -150,6 +150,7 @@ struct mtd_info {
 	 */
 	int (*erase) (struct mtd_info *mtd, struct erase_info *instr);
 
+	int (*memmap) (struct mtd_info *mtd, void **map, int flags);
 	int (*read) (struct mtd_info *mtd, loff_t from, size_t len, size_t *retlen, u_char *buf);
 	int (*write) (struct mtd_info *mtd, loff_t to, size_t len, size_t *retlen, const u_char *buf);
 

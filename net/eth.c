@@ -247,9 +247,21 @@ int eth_send(struct eth_device *edev, void *packet, int length)
 	if (ret)
 		return ret;
 
+	net_pcap_tx(packet, length);
+
 	led_trigger_network(LED_TRIGGER_NET_TX);
 
 	return edev->send(edev, packet, length);
+}
+
+void eth_halt(void)
+{
+	if (!eth_current)
+		return;
+
+	eth_current->halt(eth_current);
+
+	eth_current = 0;
 }
 
 static int __eth_rx(struct eth_device *edev)

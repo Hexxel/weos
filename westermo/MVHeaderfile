@@ -1,0 +1,42 @@
+boot: spi
+version: 1
+
+file-align: 0x200
+
+# file: "../images/start_dagger.pblx"
+# load-address: 0
+src-address: ~
+load-address: 0x10000000
+entry-point: 0
+
+headers:
+  # Marvell's proprietary initalization.
+  # Just close your eyes and exec it! 
+  - type: bin
+    # no idea what these args mean, just copied from the old script
+    args: [0x5b, 0]
+    file: "binary.0"
+
+  - type: reg
+    delay: 1
+    regs:
+      # Map packet processor at 0xb8000000 (1M)
+      - [0xd00200c8, 0x000f0031]
+      - [0xd00200cc, 0xb8000000]
+
+      # .. so that we can enable the PoE subsystem, to which we will
+      # download an SPI offload firmware.
+      - [0xb800001c, 0x380a086d]
+
+      # Map the PoE I/D RAM at 0xb0000000 (128M)
+      - [0xd00200d0, 0x07ff00a1]
+      - [0xd00200d4, 0xb0000000]
+
+  - type: bin
+    # arg0: Destination address in DRAM
+    # arg1: Source offset on SPI flash
+    # arg2: Bytes to copy
+    # arg3: Flags
+    #       bit0: If set, jump to arg0 after copy, else return to bootrom
+    args: [0, 0, 0xc0000, 1]
+    file: "boot.bin"

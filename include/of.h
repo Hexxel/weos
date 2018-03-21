@@ -246,6 +246,7 @@ int of_parse_partitions(struct cdev *cdev, struct device_node *node);
 int of_partitions_register_fixup(struct cdev *cdev);
 int of_device_is_stdout_path(struct device_d *dev);
 const char *of_get_model(void);
+struct device_node *of_get_chosen(struct device_node *root);
 void *of_flatten_dtb(struct device_node *node);
 int of_add_memory(struct device_node *node, bool dump);
 void of_add_memory_bank(struct device_node *node, bool dump, int r,

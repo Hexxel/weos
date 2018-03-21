@@ -123,6 +123,11 @@ config DRIVER_NET_GIANFAR
 	depends on ARCH_MPC85XX
 	select PHYLIB
 
+config DRIVER_NET_FM_ETH
+	bool "FMan Ethernet driver (DPAA)"
+	depends on ARCH_MPC85XX
+	select PHYLIB
+
 config DRIVER_NET_KS8851_MLL
 	bool "ks8851 mll ethernet driver"
 	select PHYLIB
@@ -217,6 +222,12 @@ config DRIVER_NET_TSE
 	select PHYLIB
 	help
 	  This option enables support for the Altera TSE MAC.
+
+config DRIVER_NET_XC3
+	bool "Marvell XC3 driver"
+	depends on ARCH_MVEBU
+	select PHYLIB
+	select MDIO_MVEBU
 
 config TSE_USE_DEDICATED_DESC_MEM
 	depends on DRIVER_NET_TSE

@@ -12,6 +12,7 @@
 #include <init.h>
 #include <boot.h>
 #include <i2c/i2c.h>
+#include <generated/version.h>
 
 #define MAX_LEVEL	32		/* how deeply nested we will go */
 
@@ -105,13 +106,13 @@ void of_print_cmdline(struct device_node *root)
 	const char *cmdline;
 
 	if (!node) {
-		printf("commandline: no /chosen node\n");
+		pr_info("commandline: no /chosen node\n");
 		return;
 	}
 
 	cmdline = of_get_property(node, "bootargs", NULL);
 
-	printf("commandline: %s\n", cmdline);
+	pr_info("commandline: %s\n", cmdline);
 }
 
 static int of_fixup_bootargs(struct device_node *root, void *unused)
@@ -119,17 +120,25 @@ static int of_fixup_bootargs(struct device_node *root, void *unused)
 	struct device_node *node;
 	const char *str;
 	int err;
+	char buf[64];
 
 	str = linux_bootargs_get();
 	if (!str)
 		return 0;
 
-	node = of_create_node(root, "/chosen");
+	node = of_get_chosen(root);
 	if (!node)
 		return -ENOMEM;
 
 
 	err = of_property_write_string(node, "bootargs", str);
+	if(err)
+		pr_err("Unable to fixup bootargs\n");
+
+	snprintf(buf, sizeof(buf), "%s", KERNEL_VERSION_STR);
+	err = of_set_property(node, "version", buf, strlen(buf) + 1, 1);
+	if(err)
+		pr_err("Unable to set bootloader version\n");
 
 	return err;
 }

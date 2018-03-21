@@ -121,6 +121,8 @@ static unsigned long clk_corediv_recalc_rate(struct clk *clk,
 
 	reg = readl(corediv->reg + soc_desc->ratio_offset);
 	div = (reg >> desc->offset) & desc->mask;
+pr_info ("[%s] addr = 0x%.8x, reg = 0x%.8x, div = %d\n", __FUNCTION__, (unsigned int)corediv->reg + soc_desc->ratio_offset, reg, div);
+
 	return parent_rate / div;
 }
 

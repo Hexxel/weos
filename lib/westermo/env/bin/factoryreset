@@ -1,0 +1,36 @@
+#!/bin/sh
+
+echo "Performing a factory reset will erase all configuration data,"
+echo "but will keep the currently installed firmware."
+echo
+
+if yes "Are you sure that want to erase all configuration data?" n; then
+else
+    exit
+fi
+
+echo -n "Erasing Barebox configuration .............................. "
+
+if unprotect /dev/etc && erase /dev/etc; then
+    echo -e "\e[;1m[ OK ]\e[0m"
+else
+    echo -e "\e[;1m[FAIL]\e[0m"
+    exit 1
+fi
+
+
+echo -n "Erasing System configuration ............................... "
+
+if unprotect /dev/config && erase /dev/config; then
+    echo -e "\e[;1m[ OK ]\e[0m"
+else
+    echo -e "\e[;1m[FAIL]\e[0m"
+    exit 1
+fi
+
+echo "Device was successfully factory reset."
+echo
+echo "The device will now reboot."
+timeout -a 10
+
+reset

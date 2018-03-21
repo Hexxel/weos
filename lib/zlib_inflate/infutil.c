@@ -1,5 +1,9 @@
+#include <malloc.h>
+
 #include <linux/zutil.h>
 #include <errno.h>
+#define MALLOC malloc
+#define FREE free
 
 /* Utility function: initialize zlib, unpack binary blob, clean up zlib,
  * return len or negative error code.

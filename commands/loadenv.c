@@ -96,7 +96,7 @@ static int do_loadenv(int argc, char *argv[])
 		}
 	}
 
-	printf("loading environment from %s\n", defaultenv ? "defaultenv" : filename);
+	pr_info("loading environment from %s\n", defaultenv ? "defaultenv" : filename);
 
 	if (defaultenv)
 		ret = defaultenv_load(dirname, flags);

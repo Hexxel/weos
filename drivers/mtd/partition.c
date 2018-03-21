@@ -79,6 +79,18 @@ static int mtd_part_erase(struct mtd_info *mtd, struct erase_info *instr)
 	return ret;
 }
 
+static int mtd_part_memmap(struct mtd_info *mtd, void **map, int flags)
+{
+	int err;
+
+	if (!mtd->master->memmap)
+		return -ENOSYS;
+
+	err = mtd->master->memmap(mtd->master, map, flags);
+	*map = (void *)(((u32) *map) + (u32)mtd->master_offset);
+	return err;
+}
+
 static int mtd_part_lock(struct mtd_info *mtd, loff_t offset, size_t len)
 {
 	if (!mtd->master->lock)
@@ -197,9 +209,11 @@ struct mtd_info *mtd_add_partition(struct mtd_info *mtd, off_t offset,
 	}
 
 	part->read = mtd_part_read;
+        part->memmap = mtd_part_memmap;
 	if (IS_ENABLED(CONFIG_MTD_WRITE)) {
 		part->write = mtd_part_write;
 		part->erase = mtd_part_erase;
+		part->memmap = mtd_part_memmap;
 		part->lock = mtd_part_lock;
 		part->unlock = mtd_part_unlock;
 		part->block_markbad = mtd->block_markbad ? mtd_part_block_markbad : NULL;

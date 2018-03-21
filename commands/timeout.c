@@ -32,7 +32,7 @@ static int do_timeout(int argc, char *argv[])
 	char str[2] = { };
 	const char *varname = NULL;
 
-	while ((opt = getopt(argc, argv, "crsav:e")) > 0) {
+	while ((opt = getopt(argc, argv, "cmrsav:e")) > 0) {
 		switch(opt) {
 		case 'r':
 			flags |= CONSOLE_COUNTDOWN_RETURN;
@@ -42,6 +42,9 @@ static int do_timeout(int argc, char *argv[])
 			break;
 		case 'a':
 			flags |= CONSOLE_COUNTDOWN_ANYKEY;
+			break;
+		case 'm':
+			flags |= CONSOLE_COUNTDOWN_MSEC;
 			break;
 		case 's':
 			flags |= CONSOLE_COUNTDOWN_SILENT;

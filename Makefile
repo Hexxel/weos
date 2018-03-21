@@ -1,7 +1,7 @@
 VERSION = 2017
 PATCHLEVEL = 12
 SUBLEVEL = 0
-EXTRAVERSION =
+EXTRAVERSION = -1-beta2
 NAME = None
 
 # *DOCUMENTATION*
@@ -290,6 +290,15 @@ AFLAGS_KERNEL	=
 
 LDFLAGS_MODULE  = -T common/module.lds
 
+# Read KERNELRELEASE from include/config/kernel.release (if it exists)
+KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
+KERNELVERSION ?= $(VERSION).$(PATCHLEVEL).$(SUBLEVEL)$(EXTRAVERSION)
+
+#export VERSION PATCHLEVEL SUBLEVEL KERNELRELEASE KERNELVERSION
+#export ARCH SRCARCH CONFIG_SHELL HOSTCC HOSTCFLAGS CROSS_COMPILE AS LD CC
+#export CPP AR NM STRIP OBJCOPY OBJDUMP MAKE AWK GENKSYMS PERL UTS_MACHINE
+#export HOSTCXX HOSTCXXFLAGS LDFLAGS_MODULE CHECK CHECKFLAGS
+
 # When compiling out-of-tree modules, put MODVERDIR in the module
 # tree rather than in the kernel tree. The kernel tree might
 # even be read-only.
@@ -307,7 +316,8 @@ CPPFLAGS        := -D__KERNEL__ -D__BAREBOX__ $(LINUXINCLUDE) -fno-builtin -ffre
 
 CFLAGS          := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
                    -Werror-implicit-function-declaration \
-                   -fno-strict-aliasing -fno-common -Os -pipe
+                   -fno-strict-aliasing -fno-common -O2 -pipe -fPIC
+
 AFLAGS          := -D__ASSEMBLY__
 
 LDFLAGS_barebox	:= -Map barebox.map
@@ -355,7 +365,7 @@ ifneq ($(KBUILD_SRC),)
 	    $(srctree) $(objtree) $(VERSION) $(PATCHLEVEL)
 endif
 
-# To make sure we do not include .config for any of the *config targets
+# To make sure we do not include .config miitool -r 1 0 mdio1-phy05for any of the *config targets
 # catch them early, and hand them over to scripts/kconfig/Makefile
 # It is allowed to specify more targets when calling make, including
 # mixing *config targets and build targets.
@@ -502,11 +512,32 @@ images: barebox.bin FORCE
 images/%.s: barebox.bin FORCE
 	$(Q)$(MAKE) $(build)=images $@
 
+westermo: FORCE
+	cd westermo && make
+
+westermo-clean:
+	cd westermo && make clean
+
+westermo-test: 
+	cd westermo && make test
+
+rename-target:
+	mv barebox.bin barebox.bin.raw
+	cp images/start_dagger.pblx barebox.bin
+
+copy-target:
+	@if [ -n "$(TFTPDIR)" ]; then \
+		echo "  SCP     barebox.bin to $(TFTPDIR)/barebox.bin"; \
+		scp -B barebox.bin $(TFTPDIR); \
+	fi
+
 ifdef CONFIG_PBL_MULTI_IMAGES
-all: barebox.bin images
+all: westermo barebox.bin images rename-target copy-target
 else
-all: barebox-flash-image barebox-flash-images
+all: barebox-flash-image barebox-flash-images copy-target
 endif
+
+test: westermo-test
 
 common-$(CONFIG_PBL_IMAGE)	+= pbl/
 common-$(CONFIG_DEFAULT_ENVIRONMENT) += defaultenv/
@@ -871,6 +902,7 @@ endef
 define filechk_version.h
 	(echo \#define LINUX_VERSION_CODE $(shell                             \
 	expr $(VERSION) \* 65536 + $(PATCHLEVEL) \* 256 + $(SUBLEVEL));     \
+	echo \#define KERNEL_VERSION_STR  \"$(KERNELVERSION)\"; \
 	echo '#define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))';)
 endef
 
@@ -991,7 +1023,7 @@ $(clean-dirs):
 	$(Q)$(MAKE) $(clean)=images
 	$(Q)$(MAKE) $(clean)=$(patsubst _clean_%,%,$@)
 
-clean: archclean $(clean-dirs)
+clean: westermo-clean archclean $(clean-dirs) 
 	$(call cmd,rmdirs)
 	$(call cmd,rmfiles)
 	@find . $(RCS_FIND_IGNORE) \

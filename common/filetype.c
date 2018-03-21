@@ -25,6 +25,9 @@
 #include <errno.h>
 #include <envfs.h>
 #include <disks.h>
+#include <fit.h>
+#include <cramfs/cramfs_fs.h>
+#include <linux/magic.h>
 
 struct filetype_str {
 	const char *name;	/* human readable filetype */
@@ -41,6 +44,8 @@ static const struct filetype_str filetype_str[] = {
 	[filetype_ubi] = { "UBI image", "ubi" },
 	[filetype_jffs2] = { "JFFS2 image", "jffs2" },
 	[filetype_squashfs] = { "Squashfs image", "squashfs" },
+	[filetype_fit] = { "flattened image tree", "fit" },
+	[filetype_cramfs] = { "CRAMFS", "cramfs" },
 	[filetype_gzip] = { "GZIP compressed", "gzip" },
 	[filetype_bzip2] = { "BZIP2 compressed", "bzip2" },
 	[filetype_oftree] = { "open firmware Device Tree flattened Binary", "dtb" },
@@ -280,6 +285,10 @@ enum filetype file_detect_type(const void *_buf, size_t bufsize)
 	if (buf8[0] == 0xfd && buf8[1] == 0x37 && buf8[2] == 0x7a &&
 			buf8[3] == 0x58 && buf8[4] == 0x5a && buf8[5] == 0x00)
 		return filetype_xz_compressed;
+	if (fit_looks_ok(buf))
+		return filetype_fit;
+	if (CRAMFS_32(buf[0]) == CRAMFS_MAGIC)
+		return filetype_cramfs;
 	if (buf8[0] == 'h' && buf8[1] == 's' && buf8[2] == 'q' &&
 			buf8[3] == 's')
 		return filetype_squashfs;
@@ -314,9 +323,6 @@ enum filetype file_detect_type(const void *_buf, size_t bufsize)
 		return filetype_arm_barebox;
 	if (buf[9] == 0x016f2818 || buf[9] == 0x18286f01)
 		return filetype_arm_zimage;
-
-	if (buf8[0] == 'M' && buf8[1] == 'Z')
-		return filetype_exe;
 
 	if (bufsize < 512)
 		return filetype_unknown;

@@ -21,6 +21,7 @@
 #include <libfile.h>
 #include <progress.h>
 #include <linux/stat.h>
+#include <libbb.h>
 
 /*
  * write_full - write to filedescriptor
@@ -114,6 +115,32 @@ out:
 	return line;
 }
 EXPORT_SYMBOL_GPL(read_file_line);
+
+/*
+ * memcpy_interruptible - interruptible memory copy
+ *
+ * Breaks up large memcpys into page sized chunks and allowes the
+ * operation to be aborted after each page if Ctrl-C is detected.
+ *
+ * RETURNS 0 on success, -EINTR if Ctrl-C was detected.
+ */
+int memcpy_interruptible(void *dst, const void *src, size_t sz)
+{
+	for (; sz > PAGE_SIZE; sz -= PAGE_SIZE) {
+		memcpy(dst, src, PAGE_SIZE);
+		dst += PAGE_SIZE;
+		src += PAGE_SIZE;
+
+		if (ctrlc())
+			return -EINTR;
+	}
+
+	if (sz)
+		memcpy(dst, src, sz);
+
+	return 0;
+}
+EXPORT_SYMBOL(memcpy_interruptible);
 
 /**
  * read_file_2 - read a file to an allocated buffer
@@ -342,6 +369,56 @@ out:
 	return ret ?: err1;
 }
 EXPORT_SYMBOL(copy_file);
+
+int copy_dir(const char *src, const char *dst, int verbose)
+{
+	struct dirent *ent;
+	DIR *dir;
+	int err;
+
+	if (verbose)
+		pr_info("%s -> %s\n", src, dst);
+
+	err = mkdir(dst, 0);
+	if (err == -EEXIST)
+		err = 0;
+	if (err)
+		return err;
+
+	dir = opendir(src);
+	if (!dir)
+		return ENOTDIR;
+
+	while ((ent = readdir(dir))) {
+		struct stat s;
+		char *srcent, *dstent;
+
+		if (DOT_OR_DOTDOT(ent->d_name))
+			continue;
+
+		srcent = concat_path_file(src, ent->d_name);
+		dstent = concat_path_file(dst, ent->d_name);
+
+		err = stat(srcent, &s);
+		if (err)
+			goto enterr;
+
+		if (S_ISDIR(s.st_mode))
+			err = copy_dir(srcent, dstent, verbose);
+		else
+			err = copy_file(srcent, dstent, verbose);
+
+	enterr:
+		free(srcent);
+		free(dstent);
+		if (err)
+			break;
+	}
+
+	closedir(dir);
+	return err;
+}
+EXPORT_SYMBOL(copy_dir);
 
 int copy_recursive(const char *src, const char *dst)
 {

@@ -1,0 +1,46 @@
+#!/bin/sh
+
+flag=/env/etc/rescue/fpgaupgrade
+done=/env/etc/rescue/fpgaupgrade.done
+
+echo -n "Check for System FPGA upgrade file ......................... "
+
+if [ -f $flag ]; then
+	echo -e "\e[;1m[ OK ]\e[0m"
+	readf $flag file
+	echo "Found file $file"
+
+	echo -n "Upgrade FPGA firmware ...................................... "
+	mkdir /mnt/rescue
+	mount -t tftp $eth0.serverip /mnt/rescue
+	if [ $? -ne 0 ]; then
+		 echo -e "\e[;1m[FAIL]\e[0m"
+		 rmdir /mnt/rescue
+		 echo "Unable reach TFTP server"
+		 sleep 3
+		 exit
+	fi
+	echo -e "\e[;1m[ OK ]\e[0m"
+
+	echo -n "Erasing FPGA flash ......................................... "
+	erase /dev/fpga_multiboot
+	echo -e "\e[;1m[ OK ]\e[0m"
+
+	echo -n "Programming FPGA flash ..................................... "
+	cp /mnt/rescue/$file /dev/fpga_multiboot
+	echo -e "\e[;1m[ OK ]\e[0m"
+
+	echo -e "Remove $file to avoid system restart loop. "
+	cp $flag $done
+	rm $flag
+	saveenv /dev/etc /env/etc
+
+	echo -n "Restart system ............................................. "
+	echo -e "\e[;1m[ OK ]\e[0m"
+	umount /mnt/rescue
+	rmdir  /mnt/rescue
+	reset
+else
+	echo -e "\e[;1m[ OK ]\e[0m"
+fi
+

@@ -76,6 +76,11 @@ const char *dev_get_param(struct device_d *dev, const char *name)
 		return NULL;
 	}
 
+	if (!param->get) {
+		errno = ENOSYS;
+		return NULL;
+	}
+
 	return param->get(dev, param);
 }
 
@@ -105,6 +110,11 @@ int dev_set_param(struct device_d *dev, const char *name, const char *val)
 	if (param->flags & PARAM_FLAG_RO) {
 		errno = EACCES;
 		return -EACCES;
+	}
+
+	if (!param->set) {
+		errno = ENOSYS;
+		return -ENOSYS;
 	}
 
 	ret = param->set(dev, param, val);

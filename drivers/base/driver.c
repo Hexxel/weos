@@ -470,7 +470,7 @@ const char *dev_id(const struct device_d *dev)
 	return buf;
 }
 
-static void devices_shutdown(void)
+void devices_shutdown(void)
 {
 	struct device_d *dev;
 

@@ -112,12 +112,12 @@ int password(unsigned char *passwd, size_t length, int flags, int timeout)
 }
 EXPORT_SYMBOL(password);
 
-static int is_passwd_default_enable(void)
+int is_passwd_default_enable(void)
 {
 	return strlen(default_passwd) > 0;
 }
 
-static int is_passwd_env_enable(void)
+int is_passwd_env_enable(void)
 {
 	int fd;
 
@@ -157,7 +157,7 @@ static unsigned char to_hexa(unsigned char c)
 	return c;
 }
 
-static int read_default_passwd(unsigned char *sum, size_t length)
+int read_default_passwd(unsigned char *sum, size_t length)
 {
 	int i = 0;
 	int len = strlen(default_passwd);
@@ -184,7 +184,7 @@ static int read_default_passwd(unsigned char *sum, size_t length)
 }
 EXPORT_SYMBOL(read_default_passwd);
 
-static int read_env_passwd(unsigned char *sum, size_t length)
+int read_env_passwd(unsigned char *sum, size_t length)
 {
 	int fd;
 	int ret = 0;
@@ -226,7 +226,7 @@ exit:
 }
 EXPORT_SYMBOL(read_env_passwd);
 
-static int write_env_passwd(unsigned char *sum, size_t length)
+int write_env_passwd(unsigned char *sum, size_t length)
 {
 	int fd;
 	unsigned char c;
@@ -274,7 +274,7 @@ exit:
 	return ret;
 }
 
-static int check_passwd(unsigned char *passwd, size_t length)
+int check_passwd(unsigned char *passwd, size_t length)
 {
 	struct digest *d = NULL;
 	unsigned char *passwd1_sum;

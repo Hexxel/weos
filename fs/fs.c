@@ -85,6 +85,61 @@ static int init_fs(void)
 
 postcore_initcall(init_fs);
 
+char *normalise_link(const char *pathname, const char *symlink)
+{
+	const char *buf = symlink;
+	char *path_free, *path;
+	char *absolute_path;
+	int point = 0;
+	int dir = 1;
+	int len;
+
+	if (symlink[0] == '/')
+		return strdup(symlink);
+
+	while (*buf == '.' || *buf == '/') {
+		if (*buf == '.') {
+			point++;
+		} else if (*buf == '/') {
+			point = 0;
+			dir++;
+		}
+		if (point > 2) {
+			buf -= 2;
+			break;
+		}
+		buf++;
+	}
+
+	path = path_free = strdup(pathname);
+	if (!path)
+		return NULL;
+
+	while(dir) {
+		path = dirname(path);
+		dir--;
+	}
+
+	len = strlen(buf) + strlen(path) + 1;
+	if (buf[0] != '/')
+		len++;
+
+	absolute_path = calloc(sizeof(char), len);
+
+	if (!absolute_path)
+		goto out;
+
+	strcat(absolute_path, path);
+	if (buf[0] != '/')
+		strcat(absolute_path, "/");
+	strcat(absolute_path, buf);
+
+out:
+	free(path_free);
+
+	return absolute_path;
+}
+
 char *normalise_path(const char *pathname)
 {
 	char *path = xzalloc(strlen(pathname) + strlen(cwd) + 2);
@@ -637,6 +692,50 @@ out:
 }
 EXPORT_SYMBOL(unlink);
 
+static char *realfile(const char *pathname, struct stat *s)
+{
+	char *path = normalise_path(pathname);
+	int ret;
+	int symlinks = 0;
+
+	ret = lstat(path, s);
+	if (ret)
+		goto out;
+
+retry:
+	if (S_ISLNK(s->st_mode)) {
+		char tmp[PATH_MAX];
+		char *new_path;
+
+		memset(tmp, 0, PATH_MAX);
+
+		ret = readlink(path, tmp, PATH_MAX - 1);
+		if (ret < 0)
+			goto out;
+
+		new_path = normalise_link(path, tmp);
+		free(path);
+		if (!new_path)
+			return ERR_PTR(-ENOMEM);
+		path = new_path;
+
+		ret = lstat(path, s);
+		if (S_ISLNK(s->st_mode)) {
+			if (symlinks <= 15) { /* Maximum level of symlinks. */
+				symlinks++;
+				goto retry;
+			}
+		}
+	}
+
+	if (!ret)
+		return path;
+
+out:
+	free(path);
+	return ERR_PTR(ret);
+}
+
 int open(const char *pathname, int flags, ...)
 {
 	struct fs_device_d *fsdev;
@@ -647,6 +746,8 @@ int open(const char *pathname, int flags, ...)
 	char *path;
 	char *freep;
 	int ret;
+
+	path = realfile(pathname, &s);
 
 	path = canonicalize_path(pathname);
 	if (IS_ERR(path)) {

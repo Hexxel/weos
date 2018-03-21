@@ -1,0 +1,40 @@
+#!/bin/sh
+
+export PATH=/env/bin:/bin
+
+#input off
+
+wd
+
+# Load configuration
+loadetc
+
+source /env/etc/config
+
+readf /env/etc/order global.boot.default
+
+readf /env/etc/rescue/address  eth0.ipaddr
+readf /env/etc/rescue/netmask  eth0.netmask
+readf /env/etc/rescue/peer     eth0.serverip
+
+# Filesystem bootstrap
+mkdir /mnt
+mkdir /mnt/fit /mnt/tftp
+source /env/etc/parttab
+source /env/bin/fpgaupgrade
+
+#input on
+
+# allow halting the boot proccess
+if timeout -c -s 1; then
+	 #input off
+    boot
+	 #input on
+    rescuenet
+fi
+
+maybelogin 60
+ethact eth0
+menutree
+
+reset

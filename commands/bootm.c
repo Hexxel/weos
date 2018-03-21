@@ -105,13 +105,13 @@ static int do_bootm(int argc, char *argv[])
 		data.os_file = argv[optind];
 
 	if (!data.os_file) {
-		printf("no boot image given\n");
+		pr_err("no boot image given\n");
 		goto err_out;
 	}
 
 	ret = bootm_boot(&data);
 	if (ret) {
-		printf("handler failed with: %s\n", strerror(-ret));
+		pr_err("handler failed with: %s\n", strerror(-ret));
 		goto err_out;
 	}
 

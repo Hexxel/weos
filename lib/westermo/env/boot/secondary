@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo -n "Loading secondary image .................................... "
+wmoboot /dev/secondary
+echo -e "\e[;1m[FAIL]\e[0m"

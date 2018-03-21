@@ -1,0 +1,343 @@
+;Register definition for P1020
+;=============================
+;
+; name: user defined name of the register
+; type: the type of the register
+;	GPR	general purpose register
+;	SPR	special purpose register
+;	PMR	performance monitor register
+;	MM	memory mapped register
+;	DMMx	direct memory mapped register with offset
+;		x = 1..4
+;		the base is defined in the configuration file
+;		e.g. DMM1 0x02200000
+;	IMMx	indirect memory mapped register
+;		x = 1..4
+;		the addr and data address is defined in the configuration file
+;		e.g. IMM1 0xFEC00000 0xFEE00000
+; addr:	the number, adddress or offset of the register
+; size	the size of the register (8,16,32 or 64)
+;
+;name		type	addr		size
+;-------------------------------------------
+;
+sp		GPR	1
+;
+;
+;       extended 64-bit GPR's
+egpr0		GPR	0               64
+egpr1		GPR	1               64
+egpr2		GPR	2               64
+egpr3		GPR	3               64
+egpr4		GPR	4               64
+egpr5		GPR	5               64
+egpr6		GPR	6               64
+egpr7		GPR	7               64
+egpr8		GPR	8               64
+egpr9		GPR	9               64
+egpr10		GPR	10              64
+egpr11		GPR	11              64
+egpr12		GPR	12              64
+egpr13		GPR	13              64
+egpr14		GPR	14              64
+egpr15		GPR	15              64
+egpr16		GPR	16              64
+egpr17		GPR	17              64
+egpr18		GPR	18              64
+egpr19		GPR	19              64
+egpr20		GPR	20              64
+egpr21		GPR	21              64
+egpr22		GPR	22              64
+egpr23		GPR	23              64
+egpr24		GPR	24              64
+egpr25		GPR	25              64
+egpr26		GPR	26              64
+egpr27		GPR	27              64
+egpr28		GPR	28              64
+egpr29		GPR	29              64
+egpr30		GPR	30              64
+egpr31		GPR	31              64
+;
+;
+;       SPR's
+csrr0   	SPR	58
+csrr1   	SPR	59
+ctr     	SPR	9
+dac1    	SPR	316
+dac2    	SPR	317
+dbcr0   	SPR	308
+dbcr1   	SPR	309
+dbcr2   	SPR	310
+dbsr    	SPR	304
+dear    	SPR	61
+dec     	SPR	22
+decar   	SPR	54
+esr     	SPR	62
+iac1    	SPR	312
+iac2    	SPR	313
+ivor0   	SPR	400
+ivor1   	SPR	401
+ivor2   	SPR	402
+ivor3   	SPR	403
+ivor4   	SPR	404
+ivor5   	SPR	405
+ivor6   	SPR	406
+ivor7   	SPR	407
+ivor8   	SPR	408
+ivor9   	SPR	409
+ivor10  	SPR	410
+ivor11  	SPR	411
+ivor12  	SPR	412
+ivor13  	SPR	413
+ivor14  	SPR	414
+ivor15  	SPR	415
+ivpr    	SPR	63
+lr      	SPR	8
+pid     	SPR	48
+pir     	SPR	286
+pvr     	SPR	287
+sprg0   	SPR	272
+sprg1   	SPR	273
+sprg2   	SPR	274
+sprg3_ro   	SPR	259
+sprg3   	SPR	275
+sprg4_ro   	SPR	260
+sprg4   	SPR	276
+sprg5_ro   	SPR	261
+sprg5   	SPR	277
+sprg6_ro   	SPR	262
+sprg6   	SPR	278
+sprg7_ro   	SPR	263
+sprg7   	SPR	279
+srr0    	SPR	26
+srr1    	SPR	27
+svr     	SPR	1023
+tbl_ro     	SPR	268
+tbl     	SPR	284
+tbu_ro     	SPR	269
+tbu     	SPR	285
+tcr     	SPR	340
+tsr     	SPR	336
+usprg0  	SPR	256
+xer     	SPR	1
+;
+bbear   	SPR	513
+bbtar   	SPR	514
+bucsr   	SPR	1013
+hid0    	SPR	1008
+hid1    	SPR	1009
+ivor32  	SPR	528
+ivor33  	SPR	529
+ivor34  	SPR	530
+ivor35  	SPR	531
+l1cfg0  	SPR	515
+l1cfg1  	SPR	516
+l1csr0  	SPR	1010
+l1csr1  	SPR	1011
+mas0    	SPR	624
+mas1    	SPR	625
+mas2    	SPR	626
+mas3    	SPR	627
+mas4    	SPR	628
+mas6    	SPR	630
+mas7    	SPR	944
+mcsr    	SPR	572
+mcsrr0  	SPR	570
+mcsrr1  	SPR	571
+mmucfg  	SPR	1015
+mmucsr0 	SPR	1012
+pid0    	SPR	 48
+pid1    	SPR	633
+pid2    	SPR	634
+spefscr 	SPR	512
+tlb0cfg 	SPR	688
+tlb1cfg 	SPR	689
+;
+;
+;
+;       Local Access Register
+ccsrbar         CCSR    0x00000
+altcbar         CCSR    0x00008
+altcar          CCSR    0x00010
+bptr            CCSR    0x00020
+laipbrr1        CCSR    0x00BF8
+laipbrr2        CCSR    0x00BFC
+lawbar0         CCSR    0x00C08
+lawar0          CCSR    0x00C10
+lawbar1         CCSR    0x00C28
+lawar1          CCSR    0x00C30
+lawbar2         CCSR    0x00C48
+lawar2          CCSR    0x00C50
+lawbar3         CCSR    0x00C68
+lawar3          CCSR    0x00C70
+lawbar4         CCSR    0x00C88
+lawar4          CCSR    0x00C90
+lawbar5         CCSR    0x00CA8
+lawar5          CCSR    0x00CB0
+lawbar6         CCSR    0x00CC8
+lawar6          CCSR    0x00CD0
+lawbar7         CCSR    0x00CE8
+lawar7          CCSR    0x00CF0
+lawbar8         CCSR    0x00D08
+lawar8          CCSR    0x00D10
+lawbar9         CCSR    0x00D28
+lawar9          CCSR    0x00D30
+lawbar10        CCSR    0x00D48
+lawar10         CCSR    0x00D50
+lawbar11        CCSR    0x00D68
+lawar11         CCSR    0x00D70
+;
+;       e500r2 coherency module (ECM)
+eebacr          CCSR    0x01000
+eebpcr          CCSR    0x01010
+eipbrr1         CCSR    0x01BF8
+eipbrr2         CCSR    0x01BFC
+eedr            CCSR    0x01E00
+eeer            CCSR    0x01E08
+eeatr           CCSR    0x01E0C
+eeladr          CCSR    0x01E10
+eehadr          CCSR    0x01E14
+;
+;       DDR Memory Controller
+cs0_bnds        CCSR    0x02000
+cs1_bnds        CCSR    0x02008
+cs0_config      CCSR    0x02080
+cs1_config      CCSR    0x02084
+cs0_config_2    CCSR    0x020C0
+cs1_config_2    CCSR    0x020C4
+timing_cfg_3    CCSR    0x02100
+timing_cfg_0    CCSR    0x02104
+timing_cfg_1    CCSR    0x02108
+timing_cfg_2    CCSR    0x0210C
+ddr_cfg         CCSR    0x02110
+ddr_cfg_2       CCSR    0x02114
+ddr_mode        CCSR    0x02118
+ddr_mode_2      CCSR    0x0211C
+ddr_mode_cntl   CCSR    0x02120
+ddr_interval    CCSR    0x02124
+ddr_data_init   CCSR    0x02128
+ddr_clk_cntl    CCSR    0x02130
+ddr_init_addr   CCSR    0x02148
+ddr_init_eaddr  CCSR    0x0214C
+timing_cfg_4    CCSR    0x02160
+timing_cfg_5    CCSR    0x02164
+ddr_zq_cntl     CCSR    0x02170
+ddr_wrlvl_cntl  CCSR    0x02174
+ddrdsr_1        CCSR    0x02B20
+ddrdsr_2        CCSR    0x02B24
+ddrcdr_1        CCSR    0x02B28
+ddrcdr_2        CCSR    0x02B2C
+ddr_ip_rev1     CCSR    0x02BF8
+ddr_ip_rev2     CCSR    0x02BFC
+err_inject_hi   CCSR    0x02E00
+err_inject_lo   CCSR    0x02E04
+ecc_err_inject  CCSR    0x02E08
+cap_data_hi     CCSR    0x02E20
+cap_data_lo     CCSR    0x02E24
+cap_ecc         CCSR    0x02E28
+err_detect      CCSR    0x02E40
+err_disable     CCSR    0x02E44
+err_int_en      CCSR    0x02E48
+cap_attr        CCSR    0x02E4C
+cap_addr        CCSR    0x02E50
+cap_ext_addr    CCSR    0x02E54
+err_sbe         CCSR    0x02E58
+;
+;       Local Bus Controller
+br0             CCSR    0x05000
+br1             CCSR    0x05008
+br2             CCSR    0x05010
+br3             CCSR    0x05018
+br4             CCSR    0x05020
+br5             CCSR    0x05028
+br6             CCSR    0x05030
+br7             CCSR    0x05038
+or0             CCSR    0x05004
+or1             CCSR    0x0500C
+or2             CCSR    0x05014
+or3             CCSR    0x0501C
+or4             CCSR    0x05024
+or5             CCSR    0x0502C
+or6             CCSR    0x05034
+or7             CCSR    0x0503C
+mar             CCSR    0x05068
+mamr            CCSR    0x05070
+mbmr            CCSR    0x05074
+mcmr            CCSR    0x05078
+mrtpr           CCSR    0x05084
+mdr             CCSR    0x05088
+lsor            CCSR    0x05090
+lsdmr           CCSR    0x05094
+lurt            CCSR    0x050A0
+lsrt            CCSR    0x050A4
+ltesr           CCSR    0x050B0
+ltedr           CCSR    0x050B4
+lteir           CCSR    0x050B8
+lteatr          CCSR    0x050BC
+ltear           CCSR    0x050C0
+lbcr            CCSR    0x050D0
+lcrr            CCSR    0x050D4
+fmr             CCSR    0x050E0
+fir             CCSR    0x050E4
+fcr             CCSR    0x050E8
+fbar            CCSR    0x050EC
+fpar            CCSR    0x050F0
+fbcr            CCSR    0x050F4
+;
+;       L2/SRAM
+l2ctl           CCSR    0x20000
+l2cewar0        CCSR    0x20010
+l2cewarea0      CCSR    0x20014
+l2cewcr0        CCSR    0x20018
+l2cewar1        CCSR    0x20020
+l2cewarea1      CCSR    0x20024
+l2cewcr1        CCSR    0x20028
+l2cewar2        CCSR    0x20030
+l2cewarea2      CCSR    0x20034
+l2cewcr2        CCSR    0x20038
+l2cewar3        CCSR    0x20040
+l2cewarea3      CCSR    0x20044
+l2cewcr3        CCSR    0x20048
+l2srbar0        CCSR    0x20100
+l2srbarea0      CCSR    0x20104
+l2srbar1        CCSR    0x20108
+l2srbarea1      CCSR    0x2010C
+l2errinjhi      CCSR    0x20E00
+l2errinjlo      CCSR    0x20E04
+l2errinjctl     CCSR    0x20E08
+l2captdatahi    CCSR    0x20E20
+l2captdatalo    CCSR    0x20E24
+l2captecc       CCSR    0x20E28
+l2errdet        CCSR    0x20E40
+l2errdis        CCSR    0x20E44
+l2errinten      CCSR    0x20E48
+l2errattr       CCSR    0x20E4C
+l2erraddrh      CCSR    0x20E50
+l2erraddrl      CCSR    0x20E54
+l2errctl        CCSR    0x20E58
+;
+;       Global Utilities Block
+porpllsr        CCSR    0xE0000
+porbmsr         CCSR    0xE0004
+porimpscr       CCSR    0xE0008
+pordevsr        CCSR    0xE000C
+pordbgmsr       CCSR    0xE0010
+gpporcr         CCSR    0xE0020
+devdisr         CCSR    0xE0070
+powmgtcsr       CCSR    0xE0080
+mcpsumr         CCSR    0xE0090
+rstrscr         CCSR    0xE0094
+ectrstcr        CCSR    0xE0098
+autorstsr       CCSR    0xE009C
+mm_pvr          CCSR    0xE00A0
+mm_svr          CCSR    0xE00A4
+rstcr           CCSR    0xE00B0
+lbcvselcr       CCSR    0xE00C0
+ddrclkdr        CCSR    0xE0B28
+clkocr          CCSR    0xE0E00
+ecmcr           CCSR    0xE0E20
+srdscr0         CCSR    0xE3000
+srdscr1         CCSR    0xE3004
+srdscr2         CCSR    0xE3008
+;
+;

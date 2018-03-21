@@ -1,0 +1,80 @@
+#!/bin/sh
+
+filetype -s imgtype $1
+if [ "$imgtype" = "fit" ]; then
+    kernel=$1
+
+    # FIT images are always run from RAM
+    root_primary="/dev/ram0"
+    root_secondary="/dev/ram0"
+
+    # 3.0.x kernels do not honor of_reserve_regions, so use mem= as a
+    # fallback for secondary boot page (512M - 4k)
+    global linux.bootargs.mem="mem=524284k"
+elif [ "$imgtype" = "cramfs" ]; then
+    kernel=$1
+elif [ "$imgtype" = "squashfs" ]; then
+    if mkdir -p /mnt/bootfs; then
+    else
+	exit 1
+    fi
+
+    if [ "$1" != "/dev/ramload" ]; then
+	if wmocp $1 /dev/ramload; then
+	else
+	    rmdir /mnt/bootfs
+	    exit 1
+	fi
+    fi
+
+    if wmosum /dev/ramload; then
+    else
+	rmdir /mnt/bootfs
+	exit 1
+    fi
+
+    if mount -t squashfs /dev/ramload /mnt/bootfs; then
+    else
+	rmdir /mnt/bootfs
+	exit 1
+    fi
+
+    product="$global.wmo.product"
+    bootpath="/mnt/bootfs/boot/$product-*"
+    if [ ! -d $bootpath ]; then
+	bootpath="/mnt/bootfs/boot/default"
+	echo -e "\nWARNING unknown product $product, booting default"
+    fi
+
+    kernel="$bootpath/kernel"
+    dtb="-o $bootpath/device-tree.dtb"
+else
+    echo "Unknown image type ($imgtype)"
+    exit 1
+fi
+
+load="-a $kernel_load"
+
+if [ "$1" = "/dev/ramload" ]; then
+    initrd="-L $ramload_base -r /dev/ramload"
+fi
+
+global linux.bootargs.quiet="loglevel=$global.loglevel"
+
+if [ "$1" = "/dev/ramload" ]; then
+    global wmo.boot_partition="RAM"
+    global linux.bootargs.root="root=/dev/ram0"
+elif [ "$1" = "/dev/primary" ]; then
+    global wmo.boot_partition="Linux_main"
+    global linux.bootargs.root="root=$root_primary"
+elif [ "$1" = "/dev/secondary" ]; then
+    global wmo.boot_partition="Linux_backup"
+    global linux.bootargs.root="root=$root_secondary"
+fi
+
+bootm -f $load $initrd $dtb $kernel
+
+if [ "$imgtype" = "squashfs" ]; then
+    umount /mnt/bootfs
+    rmdir /mnt/bootfs
+fi

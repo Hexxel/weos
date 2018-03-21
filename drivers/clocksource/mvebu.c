@@ -96,6 +96,7 @@ static int mvebu_timer_probe(struct device_d *dev)
 static struct of_device_id mvebu_timer_dt_ids[] = {
 	{ .compatible = "marvell,armada-370-timer", },
 	{ .compatible = "marvell,armada-xp-timer", },
+	{ .compatible = "marvell,msys-timer", },
 	{ }
 };
 

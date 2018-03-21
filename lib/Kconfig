@@ -82,6 +82,11 @@ config LIBUBIGEN
 config STMP_DEVICE
 	bool
 
+config FIT_IMAGE
+	bool "support for booting FIT images"
+
+source lib/libfdt/Kconfig
+
 config RATP
 	select CRC16
 	bool
@@ -99,6 +104,11 @@ config ALLOW_PRNG_FALLBACK
 	  available and this option is disabled, cmd_password will fail.
 	  Enable it on your own risk.
 
+config FIT_IMAGE
+	bool "support for booting FIT images"
+
+source lib/libfdt/Kconfig
+
 source lib/gui/Kconfig
 
 source lib/fonts/Kconfig
@@ -106,6 +116,8 @@ source lib/fonts/Kconfig
 source lib/logo/Kconfig
 
 source lib/bootstrap/Kconfig
+
+source lib/westermo/Kconfig
 
 config PRINTF_UUID
 	bool

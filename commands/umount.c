@@ -23,10 +23,10 @@
 
 static int do_umount(int argc, char *argv[])
 {
-	if (argc != 2)
-		return COMMAND_ERROR_USAGE;
+       if (argc != 2)
+               return COMMAND_ERROR_USAGE;
 
-	return umount(argv[1]);
+       return umount(argv[1]);
 }
 
 

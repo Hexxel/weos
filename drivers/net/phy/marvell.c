@@ -64,6 +64,27 @@
 #define MII_88E1540_QSGMII_CONTROL	0x0
 #define MII_88E1540_QSGMII_AUTONEG_EN	BIT(12)
 
+/* MII_88E1548P_PHY register defines */
+#define MII_88E1548P_PHY_CCR								0x00
+#define MII_88E1548P_PHY_CCR_POWER_DOWN				BIT(11)
+#define MII_88E1548P_PHY_CSR								0x01
+#define MII_88E1548P_PHY_CSCR								0x10
+#define MII_88E1548P_PHY_CSCR_POWER_DOWN				BIT(2)
+
+#define MII_88E1548P_PHY_LED_PAGE						0x03
+#define MII_88E1548P_PHY_LED_FCR							0x10
+#define MII_88E1548P_PHY_LED_PCR							0x11
+#define MII_88E1548P_PHY_LED_TCR							0x12
+#define MII_88E1548P_PHY_LED_TCR_FORCE_INT			BIT(15)
+#define MII_88E1548P_PHY_LED_TCR_INTn_ENABLE			BIT(7)
+#define MII_88E1548P_PHY_LED_TCR_INT_ACTIVE_LOW		BIT(11)
+
+#define MII_88E1548P_IMASK									0x12
+#define MII_88E1548P_IMASK_INIT							0x6400
+#define MII_88E1548P_IMASK_CLEAR							0x0000
+#define MII_88E1548P_IEVENT								0x13
+#define MII_88E1548P_IEVENT_CLEAR						0x0000
+
 #define MII_88E1510_GEN_CTRL_REG_1              0x14
 #define MII_88E1510_GEN_CTRL_REG_1_MODE_MASK    0x7
 #define MII_88E1510_GEN_CTRL_REG_1_MODE_SGMII   0x1     /* SGMII to copper */
@@ -77,6 +98,7 @@
 
 #define ADVERTISE_PAUSE_FIBER		0x180
 #define ADVERTISE_PAUSE_ASYM_FIBER	0x100
+
 
 /*
  * marvell_read_status
@@ -94,12 +116,21 @@ static int marvell_read_status(struct phy_device *phydev)
 	int err;
 	int lpa;
 	int status = 0;
+	static int adjust_in_progress = 0;
 
 	/* Update the link, but return if there
 	 * was an error */
 	err = genphy_update_link(phydev);
 	if (err)
 		return err;
+
+	/* If we don't have a link on the current phy,
+	 *  check if any other phy's have link */
+	if ((!adjust_in_progress) && (phydev->link == 0)) {
+		adjust_in_progress = 1;
+		phydev->adjust_link(phydev->attached_dev);
+		adjust_in_progress = 0;
+	}
 
 	if (AUTONEG_ENABLE == phydev->autoneg) {
 		status = phy_read(phydev, MII_M1011_PHY_STATUS);
@@ -682,6 +713,156 @@ static int m88e1510_config_init(struct phy_device *phydev)
 	return m88e1121_config_init(phydev);
 }
 
+static int m88e1548p_config_aneg(struct phy_device *phydev)
+{
+	int err;
+
+	err = genphy_config_aneg(phydev);
+	if (err < 0)
+		return err;
+
+	if (phydev->autoneg != AUTONEG_ENABLE) {
+		int bmcr;
+
+		/*
+		 * A write to speed/duplex bits (that is performed by
+		 * genphy_config_aneg() call above) must be followed by
+		 * a software reset. Otherwise, the write has no effect.
+		 */
+		bmcr = phy_read(phydev, MII_BMCR);
+		if (bmcr < 0)
+			return bmcr;
+
+		err = phy_write(phydev, MII_BMCR, bmcr | BMCR_RESET);
+		if (err < 0)
+			return err;
+	}
+
+	return 0;
+}
+
+static int m88e1548p_config_init(struct phy_device *phydev)
+{
+	int temp;
+	int err;
+
+// 	/* Set Power Down */
+// 	temp = phy_read(phydev, MII_88E1548P_PHY_CCR);
+// 	if (temp < 0)
+// 		return temp;
+//
+// 	temp |= MII_88E1548P_PHY_CCR_POWER_DOWN;
+// 	err = phy_write(phydev, MII_88E1548P_PHY_CCR, temp);
+// 	if (err < 0)
+// 		return err;
+//
+// 	temp = phy_read(phydev, MII_88E1548P_PHY_CSCR);
+// 	if (temp < 0)
+// 		return temp;
+//
+// 	temp |= MII_88E1548P_PHY_CSCR_POWER_DOWN;
+// 	err = phy_write(phydev, MII_88E1548P_PHY_CSCR, temp);
+// 	if (err < 0)
+// 		return err;
+//
+#if 0
+	temp = 0x9140;	/* 1000 Mbps, auto-neg and full duplex as default */
+	err = phy_write(phydev, MII_88E1548P_PHY_CCR, temp);
+	if (err < 0)
+		return err;
+#endif
+
+	/* Todo: LED control */
+	u16 reg;
+	int ret;
+
+	/* Configure QSGMII auto-negotiation */
+	if (phydev->interface == PHY_INTERFACE_MODE_QSGMII) {
+		ret = phy_write(phydev, MII_MARVELL_PHY_PAGE,
+				MII_88E1540_QSGMII_PAGE);
+		if (ret < 0)
+			return ret;
+
+		reg = phy_read(phydev, MII_88E1540_QSGMII_CONTROL);
+		ret = phy_write(phydev, MII_88E1540_QSGMII_CONTROL,
+					reg | MII_88E1540_QSGMII_AUTONEG_EN);
+		if (ret < 0)
+			return ret;
+	}
+
+// 	/* Configure LED as:
+// 	 * Activity: Blink
+// 	 * Link:     On
+// 	 * No Link:  Off
+// 	 */
+// 	phy_write(phydev, MII_MARVELL_PHY_PAGE, MII_88E1540_LED_PAGE);
+// 	phy_write(phydev, MII_88E1540_LED_CONTROL, 0x1111);
+
+// 	if (phydev->interface == PHY_INTERFACE_MODE_SGMII) {
+	if (phydev->interface != PHY_INTERFACE_MODE_QSGMII) {
+		ret = phy_write(phydev, MII_MARVELL_PHY_PAGE, 1);
+		if (ret < 0)
+			return ret;
+
+		reg = phy_read(phydev, 26);
+		ret = phy_write(phydev, 26, reg | 0x7);
+		if (ret < 0)
+			return ret;
+	}
+
+	/* Power-up the PHY. When going from power down to normal operation,
+	 * software reset and auto-negotiation restart are also performed.
+	 */
+	ret = phy_write(phydev, MII_MARVELL_PHY_PAGE,
+				MII_MARVELL_PHY_DEFAULT_PAGE);
+	if (ret < 0)
+		return ret;
+
+	/* Set Power Down */
+	temp = phy_read(phydev, MII_88E1548P_PHY_CCR);
+	if (temp < 0)
+		return temp;
+
+	temp &= ~MII_88E1548P_PHY_CCR_POWER_DOWN;
+	err = phy_write(phydev, MII_88E1548P_PHY_CCR, temp);
+	if (err < 0)
+		return err;
+
+	temp = phy_read(phydev, MII_88E1548P_PHY_CSCR);
+	if (temp < 0)
+		return temp;
+
+	temp &= ~MII_88E1548P_PHY_CSCR_POWER_DOWN;
+	err = phy_write(phydev, MII_88E1548P_PHY_CSCR, temp);
+	if (err < 0)
+		return err;
+
+// 	ret = phy_write(phydev, MII_MARVELL_PHY_PAGE,
+// 				MII_MARVELL_PHY_DEFAULT_PAGE);
+// 	if (ret < 0)
+// 		return ret;
+// 	ret = phy_write(phydev, MII_BMCR,
+// 			phy_read(phydev, MII_BMCR) & ~BMCR_PDOWN);
+// 	if (ret < 0)
+// 		return ret;
+
+	/* Config the registers due to the DTS.*/
+	return marvell_of_reg_init(phydev);
+}
+
+#if 0
+static int m88e1548p_did_interrupt(struct phy_device *phydev)
+{
+ 	int imask;
+
+	imask = phy_read(phydev, MII_88E1548P_IEVENT);
+	if (imask & MII_88E1548P_IMASK_INIT)
+		return 1;
+
+	return 0;
+}
+#endif
+
 static struct phy_driver marvell_drivers[] = {
 	{
 		.phy_id = MARVELL_PHY_ID_88E1111,
@@ -736,6 +917,22 @@ static struct phy_driver marvell_drivers[] = {
 		.config_init = &m88e1540_config_init,
 		.config_aneg = &m88e1510_config_aneg,
 		.read_status = &marvell_read_status,
+	},
+	{
+		.phy_id = MARVELL_PHY_ID_88E1548P,
+		.phy_id_mask = MARVELL_PHY_ID_MASK,
+		.drv.name = "Marvell 88E1548P",
+		.features = PHY_GBIT_FEATURES,
+// 		.flags = PHY_HAS_INTERRUPT,
+		.config_init = m88e1548p_config_init,
+		.config_aneg = m88e1548p_config_aneg,
+		.read_status = marvell_read_status,
+// 		.ack_interrupt = &marvell_ack_interrupt,
+// 		.config_intr = &marvell_config_intr,
+// 		.did_interrupt = &m88e1548p_did_interrupt,
+// 		.resume = &genphy_resume,
+// 		.suspend = &genphy_suspend,
+// 		.driver = { .owner = THIS_MODULE },
 	},
 };
 

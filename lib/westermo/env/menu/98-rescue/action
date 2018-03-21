@@ -1,0 +1,5 @@
+#!/bin/sh
+
+global loglevel=7
+
+rescue

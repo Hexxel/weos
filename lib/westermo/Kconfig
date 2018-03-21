@@ -1,0 +1,13 @@
+config LIBWESTERMO
+       bool "include Westermo library routines"
+
+config WMO_BACKPLANE
+       bool
+       depends on LIBWESTERMO && MV88E6XXX_PHY
+       default y
+
+config WMO_IDMEM
+       string "Westermo IDMEM file"
+       depends on LIBWESTERMO
+       default "/dev/eeprom0" if BASIS || CORAZON || MACH_DAGGER
+       default "/dev/eeprom1" if CORONET

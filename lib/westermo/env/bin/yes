@@ -1,0 +1,22 @@
+#!/bin/sh
+
+defaultfmt="y/[n]"
+
+if [ "$2" = "y" ]; then
+    defaultfmt="[y]/n"
+fi
+
+readline "$1 $defaultfmt " input
+if [ ! $? -eq 0 ]; then
+    exit 2
+fi
+
+if [ -z "$input" ]; then
+    input=$2
+fi
+
+if [ "$input" = "y" ]; then
+    exit 0
+else
+    exit 1
+fi

@@ -40,6 +40,13 @@ int console_countdown(int timeout_s, unsigned flags, char *out_key)
 	second = start;
 
 	countdown = timeout_s;
+	if (flags & CONSOLE_COUNTDOWN_MSEC) {
+		countdown = (int)timeout_s / 1000;
+		timeout_s *= MSECOND;
+	} else {
+		countdown = timeout_s;
+		timeout_s *= SECOND;
+	}
 
 	if (!(flags & CONSOLE_COUNTDOWN_SILENT))
 		printf("%4d", countdown--);
@@ -65,7 +72,7 @@ int console_countdown(int timeout_s, unsigned flags, char *out_key)
 			printf("\b\b\b\b%4d", countdown--);
 			second += SECOND;
 		}
-	} while (!is_timeout(start, timeout_s * SECOND));
+	} while (!is_timeout(start, timeout_s));
 
 	if ((flags & CONSOLE_COUNTDOWN_EXTERN) &&
 	    console_countdown_timeout_abort)

@@ -190,6 +190,36 @@ static char *symbol_string(char *buf, char *end, void *ptr, int field_width, int
 #endif
 }
 
+static char *macaddr(char *buf, char *end, void *ptr, int field_width, int precision, int flags)
+{
+	char *mac = ptr;
+	int i;
+
+	for (i = 0; i < 6; i++) {
+		buf = number(buf, end, mac[i], 16, 2, 2, SMALL);
+
+		if (buf < end && i < 5)
+			*buf++ = ':';
+	}
+
+	return buf;
+}
+
+static char *ipaddr(char *buf, char *end, void *ptr, int field_width, int precision, int flags)
+{
+	char *ip = ptr;
+	int i;
+
+	for (i = 0; i < 4; i++) {
+		buf = number(buf, end, ip[i], 10, -1, -1, 0);
+
+		if (buf < end && i < 3)
+			*buf++ = '.';
+	}
+
+	return buf;
+}
+
 static noinline_for_stack
 char *ip4_addr_string(char *buf, char *end, const u8 *addr, int field_width,
 		      int precision, int flags, const char *fmt)
@@ -291,6 +321,8 @@ char *address_val(char *buf, char *end, const void *addr,
  * - 'I' [4] for IPv4 addresses printed in the usual way
  *       IPv4 uses dot-separated decimal without leading 0's (1.2.3.4)
  * - 'S' For symbolic direct pointers
+ * - 'M' For Ethernet (MAC) addresses
+ * - 'I' For IPv4 addresses
  * - 'U' For a 16 byte UUID/GUID, it prints the UUID/GUID in the form
  *       "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
  *       Options for %pU are:
@@ -312,6 +344,8 @@ char *address_val(char *buf, char *end, const void *addr,
 static char *pointer(const char *fmt, char *buf, char *end, void *ptr, int field_width, int precision, int flags)
 {
 	switch (*fmt) {
+	case 'M':
+		return macaddr(buf, end, ptr, field_width, precision, flags);
 	case 'S':
 		return symbol_string(buf, end, ptr, field_width, precision, flags);
 	case 'U':
@@ -324,7 +358,10 @@ static char *pointer(const char *fmt, char *buf, char *end, void *ptr, int field
 		switch (fmt[1]) {
 		case '4':
                         return ip4_addr_string(buf, end, ptr, field_width, precision, flags, fmt);
+		default:
+			return ipaddr(buf, end, ptr, field_width, precision, flags);
 		}
+
 		break;
 	}
 	flags |= SMALL;
@@ -357,6 +394,8 @@ static char *pointer(const char *fmt, char *buf, char *end, void *ptr, int field
  * %pS output the name of a text symbol
  * %pF output the name of a function pointer
  * %pR output the address range in a struct resource
+ * %pM output an Ethernet (MAC) address, input must be in network order
+ * %pI output an IPv4 address, input must be in network order
  *
  * The return value is the number of characters which would
  * be generated for the given input, excluding the trailing

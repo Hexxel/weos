@@ -57,6 +57,7 @@ struct flash_info {
 	u16		addr_width;
 
 	u16		flags;
+	u32		quirks;
 #define	SECT_4K			0x01	/* SPINOR_OP_BE_4K works uniformly */
 #define	SPI_NOR_NO_ERASE	0x02	/* No erase command needed */
 #define	SST_WRITE		0x04	/* use SST byte programming */
@@ -65,6 +66,8 @@ struct flash_info {
 #define	SPI_NOR_DUAL_READ	0x20    /* Flash supports Dual Read */
 #define	SPI_NOR_QUAD_READ	0x40    /* Flash supports Quad Read */
 #define	USE_FSR			0x80	/* use flag status register */
+
+#define SPI_QUIRKS_NO_CHIP_ERASE		0x00000001  /* Chip doesn't support full chip erase */
 };
 
 #define JEDEC_MFR(info)	((info)->id[0])
@@ -337,7 +340,7 @@ static int spi_nor_erase(struct mtd_info *mtd, struct erase_info *instr)
 		return ret;
 
 	/* whole-chip erase? */
-	if (len == mtd->size) {
+	if ((len == mtd->size) && !(nor->quirks & SPI_QUIRKS_NO_CHIP_ERASE)) {
 		uint64_t timeout;
 
 		write_enable(nor);
@@ -440,6 +443,23 @@ static int spi_nor_unlock(struct mtd_info *mtd, loff_t ofs, size_t len)
 		.n_sectors = (_n_sectors),				\
 		.page_size = 256,					\
 		.flags = (_flags),					\
+	})
+
+#define INFO_QUIRKS(_jedec_id, _ext_id, _sector_size, _n_sectors, _flags, _quirks)	\
+	((unsigned long)&(struct flash_info) {				\
+		.id = {							\
+			((_jedec_id) >> 16) & 0xff,			\
+			((_jedec_id) >> 8) & 0xff,			\
+			(_jedec_id) & 0xff,				\
+			((_ext_id) >> 8) & 0xff,			\
+			(_ext_id) & 0xff,				\
+			},						\
+		.id_len = (!(_jedec_id) ? 0 : (3 + ((_ext_id) ? 2 : 0))),	\
+		.sector_size = (_sector_size),				\
+		.n_sectors = (_n_sectors),				\
+		.page_size = 256,					\
+		.flags = (_flags),					\
+		.quirks = (_quirks)					\
 	})
 
 #define INFO6(_jedec_id, _ext_id, _sector_size, _n_sectors, _flags)	\
@@ -546,7 +566,8 @@ static const struct spi_device_id spi_nor_ids[] = {
 	{ "n25q256a",    INFO(0x20ba19, 0, 64 * 1024,  512, SECT_4K | SPI_NOR_QUAD_READ) },
 	{ "n25q512a",    INFO(0x20bb20, 0, 64 * 1024, 1024, SECT_4K | USE_FSR | SPI_NOR_QUAD_READ) },
 	{ "n25q512ax3",  INFO(0x20ba20, 0, 64 * 1024, 1024, SECT_4K | USE_FSR | SPI_NOR_QUAD_READ) },
-	{ "n25q00",      INFO(0x20ba21, 0, 64 * 1024, 2048, SECT_4K | USE_FSR | SPI_NOR_QUAD_READ) },
+	{ "n25q00",      INFO_QUIRKS(0x20ba21, 0, 64 * 1024, 2048, SECT_4K | USE_FSR | SPI_NOR_QUAD_READ, SPI_QUIRKS_NO_CHIP_ERASE) },
+	{ "n25q02",      INFO(0x20ba22, 0, 64 * 1024, 4096, SECT_4K | USE_FSR | SPI_NOR_QUAD_READ) },
 
 	/* PMC */
 	{ "pm25lv512",   INFO(0,        0, 32 * 1024,    2, SECT_4K_PMC) },
@@ -937,6 +958,8 @@ int spi_nor_scan(struct spi_nor *nor, const char *name, enum read_mode mode,
 		return -ENOENT;
 
 	info = (void *)id->driver_data;
+
+	nor->quirks = info->quirks;
 
 	/*
 	 * If caller has specified name of flash model that can normally be

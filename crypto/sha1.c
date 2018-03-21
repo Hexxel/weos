@@ -244,6 +244,10 @@ static int sha1_update(struct digest *desc, const void *data,
 			sha_transform(sctx->state, src, temp);
 			done += SHA1_BLOCK_SIZE;
 			src = data + done;
+
+			if (ctrlc())
+				return -1;
+
 		} while (done + SHA1_BLOCK_SIZE <= len);
 
 		memset(temp, 0, sizeof(temp));

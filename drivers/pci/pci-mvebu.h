@@ -33,5 +33,6 @@ struct mvebu_pcie_ops {
 
 int armada_370_phy_setup(struct mvebu_pcie *pcie);
 int armada_xp_phy_setup(struct mvebu_pcie *pcie);
+int msys_phy_setup(struct mvebu_pcie *pcie);
 
 #endif

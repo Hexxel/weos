@@ -94,6 +94,17 @@ int mtd_buf_check_pattern(const void *buf, uint8_t patt, int size)
 	return 1;
 }
 
+static int mtd_op_memmap(struct cdev *cdev, void **map, int flags)
+{
+	struct mtd_info *mtd = cdev->priv;
+
+	if (mtd->memmap)
+		return mtd->memmap(mtd, map, flags);
+
+	return -ENOSYS;
+}
+
+
 static ssize_t mtd_op_read(struct cdev *cdev, void* buf, size_t count,
 			  loff_t offset, ulong flags)
 {
@@ -439,6 +450,7 @@ int mtd_read_oob(struct mtd_info *mtd, loff_t from, struct mtd_oob_ops *ops)
 }
 
 static struct file_operations mtd_ops = {
+	.memmap = mtd_op_memmap,
 	.read   = mtd_op_read,
 #ifdef CONFIG_MTD_WRITE
 	.write  = mtd_op_write,
@@ -671,9 +683,9 @@ int add_mtd_device(struct mtd_info *mtd, const char *devname, int device_id)
 		of_parse_partitions(&mtd->cdev, mtd->parent->device_node);
 		if (IS_ENABLED(CONFIG_OFDEVICE) && mtd->parent->device_node) {
 			mtd->of_path = xstrdup(mtd->parent->device_node->full_name);
-			ret = of_partitions_register_fixup(&mtd->cdev);
-			if (ret)
-				goto err1;
+//			ret = of_partitions_register_fixup(&mtd->cdev);
+//			if (ret)
+//				goto err1;
 		}
 	}
 

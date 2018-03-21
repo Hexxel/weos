@@ -887,6 +887,7 @@ static void fec_remove(struct device_d *dev)
 {
 	struct fec_priv *fec = dev->priv;
 
+	mdiobus_unregister(&fec->miibus);
 	fec_halt(&fec->edev);
 }
 

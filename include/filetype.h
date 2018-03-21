@@ -39,7 +39,9 @@ enum filetype {
 	filetype_mxs_bootstream,
 	filetype_socfpga_xload,
 	filetype_kwbimage_v1,
-	filetype_max,
+	filetype_fit,
+	filetype_cramfs,
+	filetype_max
 };
 
 #define FILE_TYPE_SAFE_BUFSIZE		2048

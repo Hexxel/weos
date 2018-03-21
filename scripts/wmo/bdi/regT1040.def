@@ -1,0 +1,806 @@
+;Register definition for T1040
+;=============================
+;
+;
+;name		type	addr		size
+;-------------------------------------------
+;
+sp		GPR	1               64
+;
+;       extended 64-bit GPR's
+gpr0		GPR	0               64
+gpr1		GPR	1               64
+gpr2		GPR	2               64
+gpr3		GPR	3               64
+gpr4		GPR	4               64
+gpr5		GPR	5               64
+gpr6		GPR	6               64
+gpr7		GPR	7               64
+gpr8		GPR	8               64
+gpr9		GPR	9               64
+gpr10		GPR	10              64
+gpr11		GPR	11              64
+gpr12		GPR	12              64
+gpr13		GPR	13              64
+gpr14		GPR	14              64
+gpr15		GPR	15              64
+gpr16		GPR	16              64
+gpr17		GPR	17              64
+gpr18		GPR	18              64
+gpr19		GPR	19              64
+gpr20		GPR	20              64
+gpr21		GPR	21              64
+gpr22		GPR	22              64
+gpr23		GPR	23              64
+gpr24		GPR	24              64
+gpr25		GPR	25              64
+gpr26		GPR	26              64
+gpr27		GPR	27              64
+gpr28		GPR	28              64
+gpr29		GPR	29              64
+gpr30		GPR	30              64
+gpr31		GPR	31              64
+;
+;
+;===============================================================
+;       SPR's
+atbl            SPR	526             64
+atbu            SPR	527
+bucsr           SPR	1013
+cdcsr0          SPR	696
+csrr0           SPR	58              64
+csrr1           SPR	59
+ctr             SPR	9               64
+dac1            SPR	316             64
+dac2            SPR	317             64
+dbcr0           SPR	308
+dbcr1           SPR	309
+dbcr2           SPR	310
+dbcr4           SPR	563
+dbsr            SPR	304
+dbsrwr          SPR	306
+ddam            SPR	576
+dear            SPR	61              64
+dec             SPR	22
+decar           SPR	54
+devent          SPR	975
+dsrr0           SPR	574             64
+dsrr1           SPR	575             64
+epcr            SPR	307
+eplc            SPR	947
+epr             SPR	702
+epsc            SPR	948
+esr             SPR	62
+gdear           SPR	381             64
+gepr            SPR	380
+gesr            SPR	383
+givor13         SPR	444
+givor14         SPR	445
+givor2          SPR	440
+givor3          SPR	441
+givor4          SPR	442
+givor8          SPR	443
+givpr           SPR	447             64
+gpir            SPR	382
+gsprg0          SPR	368             64
+gsprg1          SPR	369             64
+gsprg2          SPR	370             64
+gsprg3          SPR	371             64
+gsrr0           SPR	378             64
+gsrr1           SPR	379
+hid0            SPR	1008
+iac1            SPR	312             64
+iac2            SPR	313             64
+ivor0           SPR	400
+ivor1           SPR	401
+ivor10          SPR	410
+ivor11          SPR	411
+ivor12          SPR	412
+ivor13          SPR	413
+ivor14          SPR	414
+ivor15          SPR	415
+ivor2           SPR	402
+ivor3           SPR	403
+ivor35          SPR	531
+ivor36          SPR	532
+ivor37          SPR	533
+ivor38          SPR	432
+ivor39          SPR	433
+ivor4           SPR	404
+ivor40          SPR	434
+ivor41          SPR	435
+ivor5           SPR	405
+ivor6           SPR	406
+ivor7           SPR	407
+ivor8           SPR	408
+ivor9           SPR	409
+ivpr            SPR	63              64
+l1cfg0          SPR	515
+l1cfg1          SPR	516
+l1csr0          SPR	1010
+l1csr1          SPR	1011
+l1csr2          SPR	606
+l2captdatahi    SPR	988
+l2captdatalo    SPR	989
+l2captecc       SPR	990
+l2cfg0          SPR	519
+l2csr0          SPR	1017
+l2csr1          SPR	1018
+l2erraddr       SPR	722
+l2errattr       SPR	721
+l2errctl        SPR	724
+l2errdet        SPR	991
+l2errdis        SPR	725
+l2erreaddr      SPR	723
+l2errinjctl     SPR	987
+l2errinjhi      SPR	985
+l2errinjlo      SPR	986
+l2errinten      SPR	720
+lpidr           SPR	338
+lr              SPR	8               64
+mas0            SPR	624
+mas0mas1        SPR	373             64
+mas1            SPR	625
+mas2            SPR	626             64
+mas3            SPR	627
+mas4            SPR	628
+mas5            SPR	339
+mas5mas6        SPR	348             64
+mas6            SPR	630
+mas7            SPR	944
+mas7mas3        SPR	372             64
+mas8            SPR	341
+mas8mas1        SPR	349             64
+mcar            SPR	573             64
+mcaru           SPR	569
+mcsr            SPR	572             64
+mcsrr0          SPR	570             64
+mcsrr1          SPR	571
+mmucfg          SPR	1015
+mmucsr0         SPR	1012
+msrp            SPR	311
+npidr3          SPR	517
+nspc            SPR	984
+nspd            SPR	983
+pid             SPR	48
+pir             SPR	286
+pvr             SPR	287
+sprg0           SPR	272             64
+sprg1           SPR	273             64
+sprg2           SPR	274             64
+sprg3_ro        SPR	259             64
+sprg3           SPR	275             64
+sprg4_ro        SPR	260             64
+sprg4           SPR	276             64
+sprg5_ro        SPR	261             64
+sprg5           SPR	277             64
+sprg6_ro        SPR	262             64
+sprg6           SPR	278             64
+sprg7_ro        SPR	263             64
+sprg7           SPR	279             64
+sprg8           SPR	604             64
+sprg9           SPR	605             64
+srr0            SPR	26              64
+srr1            SPR	27
+svr             SPR	1023
+tbl_ro          SPR	268             64
+tbl             SPR	284
+tbu_ro          SPR	269
+tbu             SPR	285
+tcr             SPR	340
+tlb0cfg         SPR	688
+tlb1cfg         SPR	689
+tsr             SPR	336
+usprg0          SPR	256
+xer             SPR	1               64
+;
+;===============================================================
+;       Event Processing Unit (DCSR Space)
+epgcr           DCSR    0x00000         ;Event Processor Global Control Register
+epesr           DCSR    0x00010         ;Event Processor Event Status Register
+episr0          DCSR    0x00020         ;Event Processor Interrupt Status Register 0
+episr1          DCSR    0x00024         ;Event Processor Interrupt Status Register 1
+epctrisr        DCSR    0x00030         ;Event Processor Counter Interrupt Status Register
+epctrcsr        DCSR    0x00040         ;Event Processor Counter Capture Status Register
+epevtcr0        DCSR    0x00050         ;Event Processor EVT Pin Control Register
+epevtcr1        DCSR    0x00054
+epevtcr2        DCSR    0x00058
+epevtcr3        DCSR    0x0005C
+epevtcr4        DCSR    0x00060
+epevtcr5        DCSR    0x00064
+epevtcr6        DCSR    0x00068
+epevtcr7        DCSR    0x0006C
+epevtcr8        DCSR    0x00070
+epevtcr9        DCSR    0x00074
+;
+; EPU Counter Mux Registers
+epimcr          DCSR    0x00100
+;
+; SCU Mux Control Registers
+epsmcr0         DCSR    0x00200
+epsmcr1         DCSR    0x00208
+epsmcr2         DCSR    0x00210
+epsmcr3         DCSR    0x00218
+epsmcr4         DCSR    0x00220
+epsmcr5         DCSR    0x00228
+epsmcr6         DCSR    0x00230
+epsmcr7         DCSR    0x00238
+epsmcr8         DCSR    0x00240
+epsmcr9         DCSR    0x00248
+epsmcr10        DCSR    0x00250
+epsmcr11        DCSR    0x00258
+epsmcr12        DCSR    0x00260
+epsmcr13        DCSR    0x00268
+epsmcr14        DCSR    0x00270
+epsmcr15        DCSR    0x00278
+;
+; Combining/Sequencing Control Registers
+epecr0          DCSR    0x00300
+epecr1          DCSR    0x00304
+epecr2          DCSR    0x00308
+epecr3          DCSR    0x0030c
+epecr4          DCSR    0x00310
+epecr5          DCSR    0x00314
+epecr6          DCSR    0x00318
+epecr7          DCSR    0x0031c
+epecr8          DCSR    0x00320
+epecr9          DCSR    0x00324
+epecr10         DCSR    0x00328
+epecr11         DCSR    0x0032c
+epecr12         DCSR    0x00330
+epecr13         DCSR    0x00334
+epecr14         DCSR    0x00338
+epecr15         DCSR    0x0033c
+;
+; Action Control/Status Registers
+epacr           DCSR    0x00400         ;Event Processor Action Control Register
+;
+epgacr          DCSR    0x00480         ;Event Processor Group Action Control Register
+;
+epctrgcr0       DCSR    0x00540         ;Event Processor Counter Group Configuration Register 0
+epctrgcr1       DCSR    0x00544         ;Event Processor Counter Group Configuration Register 1
+epctrgcr2       DCSR    0x00548         ;Event Processor Counter Group Configuration Register 2
+epctrgcr3       DCSR    0x0054c         ;Event Processor Counter Group Configuration Register 3
+epegcr0         DCSR    0x00580         ;Event Processor Event Group Configuration Register 0
+epegcr1         DCSR    0x00584         ;Event Processor Event Group Configuration Register 1
+epegcr2         DCSR    0x00588         ;Event Processor Event Group Configuration Register 2
+;
+; Counter Control Registers
+epccr           DCSR    0x00800
+;
+; Counter Compare Registers
+epcmpcr         DCSR    0x00900
+;
+; Counter Registers
+epctr           DCSR    0x00A00
+;
+; Counter Capture Registers
+epcapr          DCSR    0x00B00
+;
+;===============================================================
+;       Device Run Control (DCSR Space)
+dcdsr           DCSR    0x2200C         ;Device Core Debug Status
+cdsr0           DCSR    0x22100         ;Core #0 Debug Status
+cdsr1           DCSR    0x22104         ;Core #1 Debug Status
+cdsr2           DCSR    0x22108         ;Core #2 Debug Status
+cdsr3           DCSR    0x2210C         ;Core #3 Debug Status
+;
+cesre0          DCSR    0x22500         ;Core#0 Event Status for EPU Events
+cesre1          DCSR    0x22504         ;Core#1 Event Status for EPU Events
+cesre2          DCSR    0x22508         ;Core#2 Event Status for EPU Events
+cesre3          DCSR    0x2250C         ;Core#3 Event Status for EPU Events
+;
+cesrd0          DCSR    0x22700         ;Core#0 Event Status Device Events
+cesrd1          DCSR    0x22704         ;Core#1 Event Status Device Events
+cesrd2          DCSR    0x22708         ;Core#2 Event Status Device Events
+cesrd3          DCSR    0x2270C         ;Core#3 Event Status Device Events
+;
+;Core Group Configuration Registers
+cgcr0           DCSR    0x2230C
+cgcr1           DCSR    0x2231C
+cgcr2           DCSR    0x2232C
+cgcr3           DCSR    0x2233C
+cgcr4           DCSR    0x2234C
+cgcr5           DCSR    0x2235C
+cgcr6           DCSR    0x2236C
+cgcr7           DCSR    0x2237C
+;
+;Core Group Action Control Registers for EPU Events
+cgacre0         DCSR    0x22900
+cgacre1         DCSR    0x22904
+cgacre2         DCSR    0x22908
+cgacre3         DCSR    0x2290C
+cgacre4         DCSR    0x22910
+cgacre5         DCSR    0x22914
+cgacre6         DCSR    0x22918
+cgacre7         DCSR    0x2291C
+cgacre8         DCSR    0x22920
+cgacre9         DCSR    0x22924
+cgacre10        DCSR    0x22928
+cgacre11        DCSR    0x2292C
+cgacre12        DCSR    0x22930
+cgacre13        DCSR    0x22934
+cgacre14        DCSR    0x22938
+cgacre15        DCSR    0x2293C
+;
+;Core Group Action Control Registers for Device Events
+cgacrd0         DCSR    0x22A00
+cgacrd1         DCSR    0x22A04
+cgacrd2         DCSR    0x22A08
+cgacrd3         DCSR    0x22A0C
+cgacrd4         DCSR    0x22A10
+cgacrd5         DCSR    0x22A14
+cgacrd6         DCSR    0x22A18
+cgacrd7         DCSR    0x22A1C
+cgacrd8         DCSR    0x22A20
+cgacrd9         DCSR    0x22A24
+cgacrd10        DCSR    0x22A28
+cgacrd11        DCSR    0x22A2C
+cgacrd12        DCSR    0x22A30
+cgacrd13        DCSR    0x22A34
+cgacrd14        DCSR    0x22A38
+cgacrd15        DCSR    0x22A3C
+;
+; Device Trigger Generation Concentrator Registers
+csttacr0        DCSR    0x22B00
+csttacr1        DCSR    0x22B04
+;
+;===============================================================
+;       Local Configuration Control
+ccsrbarh        CCSR    0x000000
+ccsrbarl        CCSR    0x000004
+ccsrar          CCSR    0x000008
+altcbarh        CCSR    0x000010
+altcbarl        CCSR    0x000014
+altcar          CCSR    0x000018
+bstrh           CCSR    0x000020
+bstrl           CCSR    0x000024
+bstrar          CCSR    0x000028
+;
+;       Local Access Window
+lawbarh0        CCSR    0x000C00
+lawbarl0        CCSR    0x000C04
+lawar0          CCSR    0x000C08
+lawbarh1        CCSR    0x000C10
+lawbarl1        CCSR    0x000C14
+lawar1          CCSR    0x000C18
+lawbarh2        CCSR    0x000C20
+lawbarl2        CCSR    0x000C24
+lawar2          CCSR    0x000C28
+lawbarh3        CCSR    0x000C30
+lawbarl3        CCSR    0x000C34
+lawar3          CCSR    0x000C38
+lawbarh4        CCSR    0x000C40
+lawbarl4        CCSR    0x000C44
+lawar4          CCSR    0x000C48
+lawbarh5        CCSR    0x000C50
+lawbarl5        CCSR    0x000C54
+lawar5          CCSR    0x000C58
+lawbarh6        CCSR    0x000C60
+lawbarl6        CCSR    0x000C64
+lawar6          CCSR    0x000C68
+lawbarh7        CCSR    0x000C70
+lawbarl7        CCSR    0x000C74
+lawar7          CCSR    0x000C78
+lawbarh8        CCSR    0x000C80
+lawbarl8        CCSR    0x000C84
+lawar8          CCSR    0x000C88
+lawbarh9        CCSR    0x000C90
+lawbarl9        CCSR    0x000C94
+lawar9          CCSR    0x000C98
+lawbarh10       CCSR    0x000CA0
+lawbarl10       CCSR    0x000CA4
+lawar10         CCSR    0x000CA8
+lawbarh11       CCSR    0x000CB0
+lawbarl11       CCSR    0x000CB4
+lawar11         CCSR    0x000CB8
+lawbarh12       CCSR    0x000CC0
+lawbarl12       CCSR    0x000CC4
+lawar12         CCSR    0x000CC8
+lawbarh13       CCSR    0x000CD0
+lawbarl13       CCSR    0x000CD4
+lawar13         CCSR    0x000CD8
+lawbarh14       CCSR    0x000CE0
+lawbarl14       CCSR    0x000CE4
+lawar14         CCSR    0x000CE8
+lawbarh15       CCSR    0x000CF0
+lawbarl15       CCSR    0x000CF4
+lawar15         CCSR    0x000CF8
+;
+;       Power Management
+tph10sr0        CCSR    0x0E200C
+tph10setr0      CCSR    0x0E201C
+tph10clrr       CCSR    0x0E202C
+tph10psr0       CCSR    0x0E203C
+twaitsr0        CCSR    0x0E204C
+;
+pcph15sr        CCSR    0x0E20B0
+pcph15setr      CCSR    0x0E20B4
+pcph15clrr      CCSR    0x0E20B8
+pcph15psr       CCSR    0x0E20BC
+pcph20sr        CCSR    0x0E20D0
+pcph20setr      CCSR    0x0E20D4
+pcph20clrr      CCSR    0x0E20D8
+pcph20psr       CCSR    0x0E20DC
+pcpw20sr        CCSR    0x0E20E0
+pcph30sr        CCSR    0x0E20F0
+pcph30setr      CCSR    0x0E20F4
+pcph30clrr      CCSR    0x0E20F8
+pcph30psr       CCSR    0x0E20FC
+powmgtcsr       CCSR    0x0E2130
+ippdexpcr0      CCSR    0x0E2140
+;
+tpmimr0         CCSR    0x0E215C
+tpmcimr0        CCSR    0x0E216C
+tpmmcmr0        CCSR    0x0E217C
+tpmnmimr0       CCSR    0x0E218C
+tmcpmaskcr0     CCSR    0x0E219C
+;
+pctbenr         CCSR    0x0E21A0
+pctbckselr      CCSR    0x0E21A4
+tbclkdivr       CCSR    0x0E21A8
+ttbhltcr0       CCSR    0x0E21BC
+;
+;       Integrated Flash Controller
+ifc_rev         CCSR    0x124000
+ifc_cspr0_ext   CCSR    0x12400C
+ifc_cspr0       CCSR    0x124010
+ifc_cspr1_ext   CCSR    0x124018
+ifc_cspr1       CCSR    0x12401C
+ifc_cspr2_ext   CCSR    0x124024
+ifc_cspr2       CCSR    0x124028
+ifc_cspr3_ext   CCSR    0x124030
+ifc_cspr3       CCSR    0x124034
+ifc_cspr4_ext   CCSR    0x12403C
+ifc_cspr4       CCSR    0x124040
+ifc_cspr5_ext   CCSR    0x124048
+ifc_cspr5       CCSR    0x12404C
+ifc_cspr6_ext   CCSR    0x124054
+ifc_cspr6       CCSR    0x124058
+ifc_cspr7_ext   CCSR    0x124060
+ifc_cspr7       CCSR    0x124064
+;
+ifc_amask0      CCSR    0x1240A0
+ifc_amask1      CCSR    0x1240AC
+ifc_amask2      CCSR    0x1240B8
+ifc_amask3      CCSR    0x1240C4
+ifc_amask4      CCSR    0x1240D0
+ifc_amask5      CCSR    0x1240DC
+ifc_amask6      CCSR    0x1240E8
+ifc_amask7      CCSR    0x1240F4
+;
+ifc_csor0       CCSR    0x124130
+ifc_csor0_ext   CCSR    0x124134
+ifc_csor1       CCSR    0x12413C
+ifc_csor1_ext   CCSR    0x124140
+ifc_csor2       CCSR    0x124148
+ifc_csor2_ext   CCSR    0x12414C
+ifc_csor3       CCSR    0x124154
+ifc_csor3_ext   CCSR    0x124158
+ifc_csor4       CCSR    0x124160
+ifc_csor4_ext   CCSR    0x124164
+ifc_csor5       CCSR    0x12416C
+ifc_csor5_ext   CCSR    0x124170
+ifc_csor6       CCSR    0x124178
+ifc_csor6_ext   CCSR    0x12417C
+ifc_csor7       CCSR    0x124184
+ifc_csor7_ext   CCSR    0x124188
+;
+ifc_ftim0_cs0   CCSR    0x1241C0
+ifc_ftim1_cs0   CCSR    0x1241C4
+ifc_ftim2_cs0   CCSR    0x1241C8
+ifc_ftim3_cs0   CCSR    0x1241CC
+ifc_ftim0_cs1   CCSR    0x1241F0
+ifc_ftim1_cs1   CCSR    0x1241F4
+ifc_ftim2_cs1   CCSR    0x1241F8
+ifc_ftim3_cs1   CCSR    0x1241FC
+ifc_ftim0_cs2   CCSR    0x124220
+ifc_ftim1_cs2   CCSR    0x124224
+ifc_ftim2_cs2   CCSR    0x124228
+ifc_ftim3_cs2   CCSR    0x12422C
+ifc_ftim0_cs3   CCSR    0x124250
+ifc_ftim1_cs3   CCSR    0x124254
+ifc_ftim2_cs3   CCSR    0x124258
+ifc_ftim3_cs3   CCSR    0x12425C
+ifc_ftim0_cs4   CCSR    0x124280
+ifc_ftim1_cs4   CCSR    0x124284
+ifc_ftim2_cs4   CCSR    0x124288
+ifc_ftim3_cs4   CCSR    0x12428C
+ifc_ftim0_cs5   CCSR    0x1242B0
+ifc_ftim1_cs5   CCSR    0x1242B4
+ifc_ftim2_cs5   CCSR    0x1242B8
+ifc_ftim3_cs5   CCSR    0x1242BC
+ifc_ftim0_cs6   CCSR    0x1242E0
+ifc_ftim1_cs6   CCSR    0x1242E4
+ifc_ftim2_cs6   CCSR    0x1242E8
+ifc_ftim3_cs6   CCSR    0x1242EC
+ifc_ftim0_cs7   CCSR    0x124310
+ifc_ftim1_cs7   CCSR    0x124314
+ifc_ftim2_cs7   CCSR    0x124318
+ifc_ftim3_cs7   CCSR    0x12431C
+;
+ifc_rb_stat     CCSR    0x124400
+ifc_gcr         CCSR    0x12440C
+ifc_cm_ee_stat  CCSR    0x124418
+ifc_cm_evter_en CCSR    0x124424
+ifc_cm_evter_ie CCSR    0x124430
+ifc_cm_erattr0  CCSR    0x12443C
+ifc_cm_erattr1  CCSR    0x124440
+ifc_ccr         CCSR    0x12444C
+ifc_csr         CCSR    0x124450
+ifc_ncfgr       CCSR    0x125000
+ifc_nand_fcr0   CCSR    0x125014
+ifc_nand_fcr1   CCSR    0x125018
+ifc_row0        CCSR    0x12503C
+ifc_col0        CCSR    0x125044
+ifc_col0_2kb    CCSR    0x125044
+ifc_col0_4kb    CCSR    0x125044
+ifc_col0_8kb    CCSR    0x125044
+ifc_row1        CCSR    0x12504C
+ifc_col1        CCSR    0x125054
+ifc_col1_2kb    CCSR    0x125054
+ifc_col1_4kb    CCSR    0x125054
+ifc_col1_8kb    CCSR    0x125054
+ifc_row2        CCSR    0x12505C
+ifc_col2        CCSR    0x125064
+ifc_col2_2kb    CCSR    0x125064
+ifc_col2_4kb    CCSR    0x125064
+ifc_col2_8kb    CCSR    0x125064
+ifc_row3        CCSR    0x12506C
+ifc_col3        CCSR    0x125074
+ifc_col3_2kb    CCSR    0x125074
+ifc_col3_4kb    CCSR    0x125074
+ifc_col3_8kb    CCSR    0x125074
+ifc_nand_bc     CCSR    0x125108
+ifc_nand_fir0   CCSR    0x125110
+ifc_nand_fir1   CCSR    0x125114
+ifc_nand_fir2   CCSR    0x125118
+ifc_nand_csel   CCSR    0x12515C
+ifc_nandseq_str CCSR    0x125164
+ifc_nand_ee_sta CCSR    0x12516C
+ifc_pgrdcmpl_es CCSR    0x125174
+ifc_nand_ee_en  CCSR    0x125180
+ifc_nand_ee_ien CCSR    0x12518C
+ifc_nand_eratt0 CCSR    0x125198
+ifc_nand_eratt1 CCSR    0x12519C
+ifc_nand_fsr    CCSR    0x1251E0
+ifc_eccstat0    CCSR    0x1251E8
+ifc_eccstat1    CCSR    0x1251EC
+ifc_eccstat2    CCSR    0x1251F0
+ifc_eccstat3    CCSR    0x1251F4
+ifc_nandcr      CCSR    0x125278
+ifc_nand_ab_trg CCSR    0x125284
+ifc_nand_mdr    CCSR    0x12528C
+ifc_nor_ee_stat CCSR    0x125400
+ifc_nor_ee_en   CCSR    0x12540C
+ifc_nor_ee_ien  CCSR    0x125418
+ifc_nor_eratt0  CCSR    0x125424
+ifc_nor_eratt1  CCSR    0x125428
+ifc_nor_eratt2  CCSR    0x12542C
+ifc_norcr       CCSR    0x125440
+ifc_gpcm_ee_sta CCSR    0x125800
+ifc_gpcm_ee_en  CCSR    0x12580C
+ifc_gpcm_ee_ien CCSR    0x125818
+ifc_gpcm_eratt0 CCSR    0x125824
+ifc_gpcm_eratt1 CCSR    0x125828
+ifc_gpcm_eratt2 CCSR    0x12582C
+ifc_gpcm_stat   CCSR    0x125830
+;
+;       Device Configuration and Pin Control
+porsr1          CCSR    0x0E0000
+porsr2          CCSR    0x0E0004
+gpporcr1        CCSR    0x0E0020
+fusesr          CCSR    0x0E0028
+devdisr1        CCSR    0x0E0070
+devdisr2        CCSR    0x0E0074
+devdisr3        CCSR    0x0E0078
+devdisr4        CCSR    0x0E007C
+devdisr5        CCSR    0x0E0080
+coredisr        CCSR    0x0E0094
+mmpvr           CCSR    0x0E00A0
+mmsvr           CCSR    0x0E00A4
+rstcr           CCSR    0x0E00B0
+rstrqpblsr      CCSR    0x0E00B4
+rstrqmr1        CCSR    0x0E00C0
+rstrqsr1        CCSR    0x0E00C8
+rstrqwdtmr      CCSR    0x0E00D4
+rstrqwdtsr      CCSR    0x0E00DC
+brr             CCSR    0x0E00E4
+;
+rcwsr1          CCSR    0x0E0100
+rcwsr2          CCSR    0x0E0104
+rcwsr3          CCSR    0x0E0108
+rcwsr4          CCSR    0x0E010C
+rcwsr5          CCSR    0x0E0110
+rcwsr6          CCSR    0x0E0114
+rcwsr7          CCSR    0x0E0118
+rcwsr8          CCSR    0x0E011C
+rcwsr9          CCSR    0x0E0120
+rcwsr10         CCSR    0x0E0124
+rcwsr11         CCSR    0x0E0128
+rcwsr12         CCSR    0x0E012C
+rcwsr13         CCSR    0x0E0130
+rcwsr14         CCSR    0x0E0134
+rcwsr15         CCSR    0x0E0138
+rcwsr16         CCSR    0x0E013C
+;
+scratchrw1      CCSR    0x0E0200
+scratchrw2      CCSR    0x0E0204
+scratchrw3      CCSR    0x0E0208
+scratchrw4      CCSR    0x0E020C
+scratchw1r1     CCSR    0x0E0300
+scratchw1r2     CCSR    0x0E0304
+scratchw1r3     CCSR    0x0E0308
+scratchw1r4     CCSR    0x0E030C
+crstsr          CCSR    0x0E0400
+;
+; CoreNet Platform Cache (CPC)
+;
+cpc_csr0        CCSR    0x010000
+cpc_cfg0        CCSR    0x010008
+cpc_ewcr0       CCSR    0x010010
+cpc_ewbar0      CCSR    0x010014
+cpc_ewcr1       CCSR    0x010020
+cpc_ewbar1      CCSR    0x010024
+cpc_srcr1       CCSR    0x010100
+cpc_srcr0       CCSR    0x010104
+cpc_pir0        CCSR    0x010200
+cpc_par0        CCSR    0x010208
+cpc_pwr0        CCSR    0x01020C
+cpc_pir1        CCSR    0x010210
+cpc_par1        CCSR    0x010218
+cpc_pwr1        CCSR    0x01021C
+cpc_pir2        CCSR    0x010220
+cpc_par2        CCSR    0x010228
+cpc_pwr2        CCSR    0x01022C
+cpc_pir3        CCSR    0x010230
+cpc_par3        CCSR    0x010238
+cpc_pwr3        CCSR    0x01023C
+cpc_pir4        CCSR    0x010240
+cpc_par4        CCSR    0x010248
+cpc_pwr4        CCSR    0x01024C
+cpc_pir5        CCSR    0x010250
+cpc_par5        CCSR    0x010258
+cpc_pwr5        CCSR    0x01026C
+cpc_pir6        CCSR    0x010260
+cpc_par6        CCSR    0x010268
+cpc_pwr6        CCSR    0x01026C
+cpc_pir7        CCSR    0x010270
+cpc_par7        CCSR    0x010278
+cpc_pwr7        CCSR    0x01027C
+cpc_pir8        CCSR    0x010280
+cpc_par8        CCSR    0x010288
+cpc_pwr8        CCSR    0x01028C
+cpc_pir9        CCSR    0x010290
+cpc_par9        CCSR    0x010298
+cpc_pwr9        CCSR    0x01029C
+cpc_pir10       CCSR    0x0102A0
+cpc_par10       CCSR    0x0102A8
+cpc_pwr10       CCSR    0x0102AC
+cpc_pir11       CCSR    0x0102B0
+cpc_par11       CCSR    0x0102B8
+cpc_pwr11       CCSR    0x0102BC
+cpc_pir12       CCSR    0x0102C0
+cpc_par12       CCSR    0x0102C8
+cpc_pwr12       CCSR    0x0102CC
+cpc_pir13       CCSR    0x0102D0
+cpc_par13       CCSR    0x0102D8
+cpc_pwr13       CCSR    0x0102DC
+cpc_pir14       CCSR    0x0102E0
+cpc_par14       CCSR    0x0102E8
+cpc_pwr14       CCSR    0x0102EC
+cpc_pir15       CCSR    0x0102F0
+cpc_par15       CCSR    0x0102F8
+cpc_pwr15       CCSR    0x0102FC
+cpc_errinjhi    CCSR    0x010E00
+cpc_errinjlo    CCSR    0x010E04
+cpc_errinjctl   CCSR    0x010E08
+cpc_captdatahi  CCSR    0x010E20
+cpc_captdatalo  CCSR    0x010E24
+cpc_captecc     CCSR    0x010E28
+cpc_errdet      CCSR    0x010E40
+cpc_errdis      CCSR    0x010E44
+cpc_errinten    CCSR    0x010E48
+cpc_errattr     CCSR    0x010E4C
+cpc_erreaddr    CCSR    0x010E50
+cpc_erraddr     CCSR    0x010E54
+cpc_errctl      CCSR    0x010E58
+cpc_hdbcr0      CCSR    0x010F00
+;
+; DDR Memory Controller
+;
+ddr_cs0_bnds    CCSR    0x008000
+ddr_cs1_bnds    CCSR    0x008008
+ddr_cs2_bnds    CCSR    0x008010
+ddr_cs3_bnds    CCSR    0x008018
+ddr_cs0_cfg     CCSR    0x008080
+ddr_cs1_cfg     CCSR    0x008084
+ddr_cs2_cfg     CCSR    0x008088
+ddr_cs3_cfg     CCSR    0x00808C
+ddr_cs0_cfg_2   CCSR    0x0080C0
+ddr_cs1_cfg_2   CCSR    0x0080C4
+ddr_cs2_cfg_2   CCSR    0x0080C8
+ddr_cs3_cfg_2   CCSR    0x0080CC
+ddr_tim_cfg_3   CCSR    0x008100
+ddr_tim_cfg_0   CCSR    0x008104
+ddr_tim_cfg_1   CCSR    0x008108
+ddr_tim_cfg_2   CCSR    0x00810C
+ddr_ram_cfg     CCSR    0x008110
+ddr_ram_cfg_2   CCSR    0x008114
+ddr_ram_mode    CCSR    0x008118
+ddr_ram_mode_2  CCSR    0x00811C
+ddr_md_cntl     CCSR    0x008120
+ddr_interval    CCSR    0x008124
+ddr_data_init   CCSR    0x008128
+ddr_clk_ctl     CCSR    0x008130
+ddr_init_addr   CCSR    0x008148
+ddr_init_exta   CCSR    0x00814C
+ddr_tim_cfg_4   CCSR    0x008160
+ddr_tim_cfg_5   CCSR    0x008164
+ddr_tim_cfg_6   CCSR    0x008168
+ddr_tim_cfg_7   CCSR    0x00816C
+ddr_zq_ctl      CCSR    0x008170
+ddr_wrlvl_ctl   CCSR    0x008174
+ddr_sr_cntr     CCSR    0x00817C
+ddr_sdram_rcw1  CCSR    0x008180
+ddr_sdram_rcw2  CCSR    0x008184
+ddr_wrlvl_ctl2  CCSR    0x008190
+ddr_wrlvl_ctl3  CCSR    0x008194
+ddr_sdram_rcw3  CCSR    0x0081A0
+ddr_sdram_rcw4  CCSR    0x0081A4
+ddr_sdram_rcw5  CCSR    0x0081A8
+ddr_sdram_rcw6  CCSR    0x0081AC
+ddr_ram_mode_3  CCSR    0x008200
+ddr_ram_mode_4  CCSR    0x008204
+ddr_ram_mode_5  CCSR    0x008208
+ddr_ram_mode_6  CCSR    0x00820C
+ddr_ram_mode_7  CCSR    0x008210
+ddr_ram_mode_8  CCSR    0x008214
+ddr_ram_mode_9  CCSR    0x008220
+ddr_ram_mode_10 CCSR    0x008224
+ddr_ram_mode_11 CCSR    0x008228
+ddr_ram_mode_12 CCSR    0x00822C
+ddr_ram_mode_13 CCSR    0x008230
+ddr_ram_mode_14 CCSR    0x008234
+ddr_ram_mode_15 CCSR    0x008238
+ddr_ram_mode_16 CCSR    0x00823C
+ddr_tim_cfg_8   CCSR    0x008250
+ddr_ram_cfg_3   CCSR    0x008260
+ddr_deskew_cntl CCSR    0x0082A0
+ddr_dsr_1       CCSR    0x008B20
+ddr_dsr_2       CCSR    0x008B24
+ddr_cdr_1       CCSR    0x008B28
+ddr_cdr_2       CCSR    0x008B2C
+ddr_ip_rev1     CCSR    0x008BF8
+ddr_ip_rev2     CCSR    0x008BFC
+ddr_eor         CCSR    0x008C00
+ddr_mtcr        CCSR    0x008D00
+ddr_mtp1        CCSR    0x008D20
+ddr_mtp2        CCSR    0x008D24
+ddr_mtp3        CCSR    0x008D28
+ddr_mtp4        CCSR    0x008D2C
+ddr_mtp5        CCSR    0x008D30
+ddr_mtp6        CCSR    0x008D34
+ddr_mtp7        CCSR    0x008D38
+ddr_mtp8        CCSR    0x008D3C
+ddr_mtp9        CCSR    0x008D40
+ddr_mtp10       CCSR    0x008D44
+ddr_mt_st_eadd  CCSR    0x008D60
+ddr_mt_st_addr  CCSR    0x008D64
+ddr_mt_end_eadd CCSR    0x008D68
+ddr_mt_end_addr CCSR    0x008D6C
+ddr_dat_err_hi  CCSR    0x008E00
+ddr_dat_err_lo  CCSR    0x008E04
+ddr_ecc_erri    CCSR    0x008E08
+ddr_cap_datahi  CCSR    0x008E20
+ddr_cap_datalo  CCSR    0x008E24
+ddr_cap_ecc     CCSR    0x008E28
+ddr_err_detect  CCSR    0x008E40
+ddr_err_dis     CCSR    0x008E44
+ddr_err_int_en  CCSR    0x008E48
+ddr_cap_attr    CCSR    0x008E4C
+ddr_cap_addr    CCSR    0x008E50
+ddr_cap_exta    CCSR    0x008E54
+ddr_err_sbe     CCSR    0x008E58
+;
+

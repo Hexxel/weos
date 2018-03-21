@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo -n "Loading primary image ...................................... "
+wmoboot /dev/primary
+echo -e "\e[;1m[FAIL]\e[0m"

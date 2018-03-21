@@ -257,36 +257,49 @@ static void phy_config_aneg(struct phy_device *phydev)
 		drv->config_aneg(phydev);
 }
 
-int phy_register_device(struct phy_device *phydev)
+static int __phy_register_device(struct phy_device* dev, int allow_gen)
 {
 	int ret;
 
-	if (phydev->registered)
+	if (dev->registered)
 		return -EBUSY;
 
-	if (!phydev->dev.parent)
-		phydev->dev.parent = &phydev->bus->dev;
+	if (!dev->dev.parent)
+		dev->dev.parent = &dev->bus->dev;
 
-	ret = register_device(&phydev->dev);
+	ret = register_device(&dev->dev);
 	if (ret)
 		return ret;
 
-	if (phydev->bus)
-		phydev->bus->phy_map[phydev->addr] = phydev;
+	if (dev->bus)
+		dev->bus->phy_map[dev->addr] = dev;
 
-	phydev->registered = 1;
+	dev->registered = 1;
 
-	if (phydev->dev.driver)
+	if (dev->dev.driver)
 		return 0;
 
-	phydev->dev.driver = &genphy_driver.drv;
-	ret = device_probe(&phydev->dev);
+	if (!allow_gen)
+		return -ENODEV;
+
+	dev->dev.driver = &genphy_driver.drv;
+	ret = device_probe(&dev->dev);
 	if (ret) {
-		unregister_device(&phydev->dev);
-		phydev->registered = 0;
+		unregister_device(&dev->dev);
+		dev->registered = 0;
 	}
 
 	return ret;
+}
+
+int phy_register_device(struct phy_device* dev)
+{
+	return __phy_register_device(dev, 1);
+}
+
+int phy_register_device_nogen(struct phy_device *dev)
+{
+	return __phy_register_device(dev, 0);
 }
 
 void phy_unregister_device(struct phy_device *phydev)

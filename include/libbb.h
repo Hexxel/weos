@@ -26,8 +26,14 @@ int recursive_action(const char *fileName, unsigned flags,
 
 char * safe_strncpy(char *dst, const char *src, size_t size);
 
+int copy_file(const char *src, const char *dst, int verbose);
+int copy_dir (const char *src, const char *dst, int verbose);
+
 int process_escape_sequence(const char *source, char *dest, int destlen);
 
 char *simple_itoa(unsigned int i);
+
+char *read_file_line(const char *fmt, ...);
+int memcpy_interruptible(void *dst, const void *src, size_t sz);
 
 #endif /* __LIBBB_H */

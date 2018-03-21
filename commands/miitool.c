@@ -225,7 +225,7 @@ static int show_basic_mii(struct mii_bus *mii, struct phy_device *phydev,
 	return 0;
 }
 
-static void mdiobus_show(struct device_d *dev, char *phydevname, int verbose)
+static void do_mdiobus_show(struct device_d *dev, char *phydevname, int verbose)
 {
 	struct mii_bus *mii = to_mii_bus(dev);
 	int i;
@@ -260,10 +260,72 @@ static void mdiobus_show(struct device_d *dev, char *phydevname, int verbose)
 	return;
 }
 
+static int do_mdiobus_read(struct device_d *dev, char *phydevname, int reg, int page)
+{
+
+	struct mii_bus *mii = to_mii_bus(dev);
+	int i;
+	int val, tmp = 0;
+
+	for (i = 0; i < PHY_MAX_ADDR; i++) {
+		struct phy_device *phydev;
+		phydev = mdiobus_scan(mii, i);
+		if (IS_ERR(phydev))
+			continue;
+		if (phydevname &&
+			strcmp(phydev->cdev.name, phydevname)) {
+			continue;
+		}
+		if (phydev->registered) {
+			if (page) {
+				tmp = mii->read(mii, phydev->addr, 22);
+				mii->write(mii, phydev->addr, 22, page);
+			}
+			
+			val = mii->read(mii, phydev->addr, reg);
+			mii->write(mii, phydev->addr, 22, tmp);
+			printf("0x%.4x\n", val);
+		}
+	}
+
+	return 0;
+}
+
+static void do_mdiobus_write(struct device_d *dev, char *phydevname, int reg, int val, int page)
+{
+	struct mii_bus *mii = to_mii_bus(dev);
+	int i, tmp = 0;
+
+	for (i = 0; i < PHY_MAX_ADDR; i++) {
+		struct phy_device *phydev;
+		phydev = mdiobus_scan(mii, i);
+		if (IS_ERR(phydev))
+			continue;
+		if (phydevname &&
+			strcmp(phydev->cdev.name, phydevname)) {
+			continue;
+		}
+		if (phydev->registered) {
+			if (page) {
+				tmp = mii->read(mii, phydev->addr, 22);
+				mii->write(mii, phydev->addr, 22, page);
+			}
+			
+			mii->write(mii, phydev->addr, reg, val);
+			if (reg != 22)
+				mii->write(mii, phydev->addr, 22, tmp);
+		}
+	}
+
+	return;
+}
+
 enum miitool_operations {
 	MIITOOL_NOOP,
 	MIITOOL_SHOW,
 	MIITOOL_REGISTER,
+	MIITOOL_READ,
+	MIITOOL_WRITE,
 };
 
 static int do_miitool(int argc, char *argv[])
@@ -277,8 +339,9 @@ static int do_miitool(int argc, char *argv[])
 	struct phy_device *phydev;
 	enum miitool_operations action = MIITOOL_NOOP;
 	int addr, bus;
+	int reg = 0, val = 0, page = 0;
 
-	while ((opt = getopt(argc, argv, "vs:r:")) > 0) {
+	while ((opt = getopt(argc, argv, "vs:l:r:w:")) > 0) {
 		switch (opt) {
 		case 'a':
 			addr = simple_strtol(optarg, NULL, 0);
@@ -290,16 +353,32 @@ static int do_miitool(int argc, char *argv[])
 			action = MIITOOL_SHOW;
 			phydevname = xstrdup(optarg);
 			break;
-		case 'r':
+		case 'l':
 			action = MIITOOL_REGISTER;
 			regstr = optarg;
 			break;
 		case 'v':
 			verbose++;
 			break;
+		case 'r':
+			action = MIITOOL_READ;			
+			reg = strtoull_suffix(argv[2], NULL, 16);
+			page = simple_strtoul(argv[3], NULL, 16);
+			phydevname = argv[4];
+// 			printf("mii read: reg=0x%.2x, page=0x%.2x, phy=%s \n", reg, page, phydevname);
+			break;
+		case 'w':
+			action = MIITOOL_WRITE;
+			phydevname = argv[5];
+			reg = strtoull_suffix(argv[2], NULL, 16);
+			page = simple_strtoul(argv[3], NULL, 16);
+			val = simple_strtoul(argv[4], NULL, 16);
+// 			printf("mii write: reg=0x%.2x, page=0x%.2x, val=0x%.4x\n", reg, page, val);
+			break;
 		default:
-			ret = COMMAND_ERROR_USAGE;
-			goto free_phydevname;
+// 			ret = COMMAND_ERROR_USAGE;
+// 			goto free_phydevname;
+ 			return COMMAND_ERROR_USAGE;
 		}
 	}
 
@@ -335,14 +414,22 @@ static int do_miitool(int argc, char *argv[])
 		break;
 	default:
 	case MIITOOL_SHOW:
+	case MIITOOL_READ:
+	case MIITOOL_WRITE:
 		for_each_mii_bus(mii) {
 			mdiobus_detect(&mii->dev);
-			mdiobus_show(&mii->dev, phydevname, verbose);
+			if (action == MIITOOL_SHOW)
+				do_mdiobus_show(&mii->dev, phydevname, verbose);
+ 			if (action == MIITOOL_READ)
+				do_mdiobus_read(&mii->dev, phydevname, reg, page);
+			if (action == MIITOOL_WRITE)
+				do_mdiobus_write(&mii->dev, phydevname, reg, val, page);
 		}
 		break;
 	}
 
-	ret = COMMAND_SUCCESS;
+// 	ret = COMMAND_SUCCESS;
+ 	return COMMAND_SUCCESS;
 
 free_phydevname:
 	free(phydevname);
@@ -356,15 +443,21 @@ BAREBOX_CMD_HELP_TEXT("register dummy PHY devices for raw MDIO access. Most fast
 BAREBOX_CMD_HELP_TEXT("adapters use an MII to autonegotiate link speed and duplex setting.")
 BAREBOX_CMD_HELP_TEXT("")
 BAREBOX_CMD_HELP_TEXT("Options:")
-BAREBOX_CMD_HELP_OPT("-v", "increase verbosity")
-BAREBOX_CMD_HELP_OPT("-s <devname>", "show PHY status (not providing PHY prints status of all)")
-BAREBOX_CMD_HELP_OPT("-r <busno>:<adr>", "register a PHY")
+BAREBOX_CMD_HELP_OPT("-v", "\t\tincrease verbosity")
+BAREBOX_CMD_HELP_OPT("-s <devname>", "\tshow PHY status (not providing PHY prints status of all)")
+BAREBOX_CMD_HELP_OPT("-l <busno>:<adr>", "register a PHY")
+BAREBOX_CMD_HELP_OPT("-r reg page", "\tread from phy register")
+BAREBOX_CMD_HELP_OPT("-w reg page value", "write value to phy register")
+BAREBOX_CMD_HELP_TEXT("Note: All values are in hex.")
+BAREBOX_CMD_HELP_OPT("---------------------------", "\t-----------------------------")
+BAREBOX_CMD_HELP_OPT("example miitool -r 0 0 phy0", "\tread phy reg 0 page 0")
+BAREBOX_CMD_HELP_OPT("example miitool -w 0 0 0x9140 phy0", "write 0x9140 to phy reg 0 page 0.")
 BAREBOX_CMD_HELP_END
 
 BAREBOX_CMD_START(miitool)
 	.cmd		= do_miitool,
 	BAREBOX_CMD_DESC("view media-independent interface status")
-	BAREBOX_CMD_OPTS("[-vsr]")
+	BAREBOX_CMD_OPTS("[-vslrw]")
 	BAREBOX_CMD_GROUP(CMD_GRP_NET)
 	BAREBOX_CMD_HELP(cmd_miitool_help)
 BAREBOX_CMD_END

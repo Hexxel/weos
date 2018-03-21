@@ -55,6 +55,7 @@ typedef enum {
 	PHY_INTERFACE_MODE_RTBI,
 	PHY_INTERFACE_MODE_SMII,
 	PHY_INTERFACE_MODE_QSGMII,
+	PHY_INTERFACE_MODE_XGMII,
 } phy_interface_t;
 
 #define PHY_INIT_TIMEOUT	100000
@@ -267,13 +268,16 @@ struct phy_fixup {
 
 int phy_driver_register(struct phy_driver *drv);
 int phy_drivers_register(struct phy_driver *new_driver, int n);
+struct phy_device *phy_device_create(struct mii_bus *bus, int addr, int phy_id);
 struct phy_device *get_phy_device(struct mii_bus *bus, int addr);
 int phy_init(void);
 int phy_init_hw(struct phy_device *phydev);
 
 struct phy_device *phy_device_create(struct mii_bus *bus, int addr, int phy_id);
 int phy_register_device(struct phy_device* dev);
+int phy_register_device_nogen(struct phy_device* dev);
 void phy_unregister_device(struct phy_device *phydev);
+int phy_register_device_nogen(struct phy_device *dev);
 
 /**
  * phy_read - Convenience function for reading a given PHY register

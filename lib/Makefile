@@ -59,3 +59,6 @@ obj-y			+= reed_solomon/
 obj-$(CONFIG_RATP)	+= ratp.o
 obj-y			+= list_sort.o
 obj-y			+= int_sqrt.o
+obj-y			+= libfdt/
+obj-$(CONFIG_FIT_IMAGE) += fit.o
+obj-y			+= westermo/

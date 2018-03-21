@@ -53,12 +53,12 @@ int  gunzip(unsigned char *buf, int len,
 	if (flush) {
 		out_len = 0x8000; /* 32 K */
 		out_buf = MALLOC(out_len);
+
+		if (!out_buf) {
+			goto gunzip_nomem1;
+		}
 	} else {
 		out_len = 0x7fffffff; /* no limit */
-	}
-	if (!out_buf) {
-		error("Out of memory while allocating output buffer");
-		goto gunzip_nomem1;
 	}
 
 	if (buf)
@@ -67,6 +67,7 @@ int  gunzip(unsigned char *buf, int len,
 		zbuf = MALLOC(GZIP_IOBUF_SIZE);
 		len = 0;
 	}
+
 	if (!zbuf) {
 		error("Out of memory while allocating input buffer");
 		goto gunzip_nomem2;
@@ -165,6 +166,9 @@ int  gunzip(unsigned char *buf, int len,
 			error("uncompression error");
 			rc = -1;
 		}
+
+		if (rc == Z_OK && ctrlc())
+			rc = Z_STREAM_ERROR;
 	}
 
 	zlib_inflateEnd(strm);

@@ -29,6 +29,7 @@
 #define MARVELL_PHY_ID_88E1510		0x01410dd0
 #define MARVELL_PHY_ID_88E1540		0x01410eb0
 #define MARVELL_PHY_ID_88E1543		0x01410ea0
+#define MARVELL_PHY_ID_88E1548P		0x01410ec0
 
 /* Mask used for ID comparisons */
 #define MARVELL_PHY_ID_MASK		0xfffffff0

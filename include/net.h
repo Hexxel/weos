@@ -75,6 +75,7 @@ static inline const char *eth_name(struct eth_device *edev)
 int eth_register(struct eth_device* dev);    /* Register network device		*/
 void eth_unregister(struct eth_device* dev); /* Unregister network device	*/
 int eth_set_ethaddr(struct eth_device *edev, const char *ethaddr);
+void eth_halt(void);
 
 int eth_send(struct eth_device *edev, void *packet, int length);	   /* Send a packet		*/
 int eth_rx(void);			/* Check for received packets	*/
@@ -91,10 +92,15 @@ static inline void of_eth_register_ethaddr(struct device_node *node,
 		const char *ethaddr)
 {
 }
+static inline void eth_halt(void)
+{
+}
 #else
 void eth_register_ethaddr(int ethid, const char *ethaddr);
 void of_eth_register_ethaddr(struct device_node *node, const char *ethaddr);
+void eth_halt(void);
 #endif
+
 /*
  *	Ethernet header
  */
@@ -112,6 +118,7 @@ struct ethernet {
 #define PROT_VLAN	0x8100		/* IEEE 802.1q protocol		*/
 
 #define IPPROTO_ICMP	 1	/* Internet Control Message Protocol	*/
+#define IPPROTO_TCP	 6	/* Transmission Control Protocol	*/
 #define IPPROTO_UDP	17	/* User Datagram Protocol		*/
 
 /*
@@ -193,7 +200,32 @@ struct icmphdr {
 	} un;
 } __attribute__ ((packed));
 
+struct bootp {
+	uint8_t		bp_op;		/* Operation				*/
+#define BOOTP_OP_REQUEST	1
+#define BOOTP_OP_REPLY		2
+	uint8_t		bp_htype;	/* Hardware type			*/
+#define BOOTP_HWT_ETHER	1
+	uint8_t		bp_hlen;	/* Hardware address length		*/
+#define BOOTP_HWL_ETHER	6
+	uint8_t		bp_hops;	/* Hop count (gateway thing)		*/
+	uint32_t	bp_id;		/* Transaction ID			*/
+	uint16_t	bp_secs;	/* Seconds since boot			*/
+	uint16_t	bp_spare1;	/* Alignment				*/
+	IPaddr_t	bp_ciaddr;	/* Client IP address			*/
+	IPaddr_t	bp_yiaddr;	/* Your (client) IP address		*/
+	IPaddr_t	bp_siaddr;	/* Server IP address			*/
+	IPaddr_t	bp_giaddr;	/* Gateway IP address			*/
+	uint8_t		bp_chaddr[16];	/* Client hardware address		*/
+	char		bp_sname[64];	/* Server host name			*/
+	char		bp_file[128];	/* Boot file name			*/
+	char		bp_vend[0];	/* Vendor information			*/
+};
 
+#define BOOTP_VENDOR_MAGIC	0x63825363	/* RFC1048 Magic Cookie		*/
+
+#define BOOTP_PORT_PS	67		/* BOOTP server UDP port		*/
+#define BOOTP_PORT_PC	68		/* BOOTP client UDP port		*/
 /*
  * Maximum packet size; used to allocate packet storage.
  * TFTP packets can be 524 bytes + IP header + ethernet header.
@@ -201,6 +233,12 @@ struct icmphdr {
  * a multiple of 32 bytes).
  */
 #define PKTSIZE			1518
+
+/*
+ * Size of the Marvell tag info
+ */
+#define MARVELL_TAG_SIZE	8
+
 
 /**********************************************************************/
 /*
@@ -306,6 +344,9 @@ static inline void net_copy_uint32(uint32_t *to, uint32_t *from)
 	memcpy(to, from, sizeof(uint32_t));
 }
 
+/* Convert an IP address to a string */
+char *ip_to_string (IPaddr_t x);
+
 /* Convert a string to ip address */
 int string_to_ip(const char *s, IPaddr_t *ip);
 
@@ -314,6 +355,7 @@ int setenv_ip(const char *name, IPaddr_t ip);
 
 int string_to_ethaddr(const char *str, u8 enetaddr[6]);
 void ethaddr_to_string(const u8 enetaddr[6], char *str);
+int ethaddr_add(u8 (*addr)[6], u32 term);
 
 #ifdef CONFIG_NET_RESOLV
 IPaddr_t resolv(const char *host);
@@ -434,7 +476,7 @@ struct net_connection {
 
 static inline char *net_alloc_packet(void)
 {
-	return xmemalign(32, PKTSIZE);
+	return xmemalign(32, PKTSIZE + MARVELL_TAG_SIZE);
 }
 
 struct net_connection *net_udp_new(IPaddr_t dest, uint16_t dport,
@@ -470,5 +512,13 @@ int ifup_all(unsigned flags);
 extern struct list_head netdev_list;
 
 #define for_each_netdev(netdev) list_for_each_entry(netdev, &netdev_list, list)
+
+#if defined(CONFIG_NET_PCAP)
+void net_pcap_rx(void *pkt, int len);
+void net_pcap_tx(void *pkt, int len);
+#else
+static inline void net_pcap_rx(void *pkt, int len) {}
+static inline void net_pcap_tx(void *pkt, int len) {}
+#endif	/* CONFIG_NET_PCAP */
 
 #endif /* __NET_H__ */

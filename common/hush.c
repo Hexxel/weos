@@ -836,7 +836,7 @@ static int run_pipe_real(struct p_context *ctx, struct pipe *pi)
 	} else {
 		ret = execute_binfmt(globbuf.gl_pathc, globbuf.gl_pathv);
 		if (ret < 0) {
-			printf("%s: %s\n", globbuf.gl_pathv[0], strerror(-ret));
+			pr_err("%s: %s\n", globbuf.gl_pathv[0], strerror(-ret));
 			ret = 127;
 		}
 	}

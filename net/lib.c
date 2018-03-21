@@ -57,6 +57,31 @@ void ethaddr_to_string(const u8 enetaddr[6], char *str)
 		 enetaddr[4], enetaddr[5]);
 }
 
+int ethaddr_add(u8 (*addr)[6], u32 term)
+{
+	int i;
+
+	for (i = sizeof(*addr) - 1; term && i >= 0; i--, term >>= 8) {
+		term      += (*addr)[i];
+		(*addr)[i] = term & 0xff;
+	}
+
+	return -term;
+}
+
+char *ip_to_string (IPaddr_t x)
+{
+	static char s[sizeof("xxx.xxx.xxx.xxx")];
+
+	x = ntohl (x);
+	sprintf (s, "%d.%d.%d.%d",
+		 (int) ((x >> 24) & 0xff),
+		 (int) ((x >> 16) & 0xff),
+		 (int) ((x >> 8) & 0xff), (int) ((x >> 0) & 0xff)
+		);
+	return s;
+}
+
 int string_to_ip(const char *s, IPaddr_t *ip)
 {
 	IPaddr_t addr = 0;

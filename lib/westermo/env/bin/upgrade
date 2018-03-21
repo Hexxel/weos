@@ -1,0 +1,33 @@
+#!/bin/sh
+
+netup
+
+src="$1"
+
+if [ -z $src ]; then
+	src="barebox.bin"
+fi
+
+echo downloading
+if cp /mnt/tftp/$src _bin; then
+else
+	exit $?
+fi
+
+if wmover _bin; then
+        echo "OK"
+else
+        echo "ERROR"
+	exit $?
+fi
+
+input off
+
+echo flashing
+unprotect /dev/self0
+erase /dev/self0
+cp _bin /dev/self0
+rm _bin
+echo done
+
+input on

@@ -1013,6 +1013,7 @@ static int image_create_config_parse_oneline(char *line,
 					     char *configpath)
 {
 	char *keyword, *saveptr;
+	int ret;
 
 	keyword = strtok_r(line, " ", &saveptr);
 	if (!strcmp(keyword, "VERSION")) {
@@ -1065,8 +1066,13 @@ static int image_create_config_parse_oneline(char *line,
 		el->type = IMAGE_CFG_BINARY;
 		if (*value == '/')
 			el->binary.file = strdup(value);
-		else
-			asprintf(&el->binary.file, "%s/%s", configpath, value);
+		else {
+			ret = asprintf(&el->binary.file, "%s/%s", configpath, value);
+			if (ret < 0) {
+				fprintf(stderr, "Error line %d\n", __LINE__);
+				return -1;
+			}
+		}
 		while (1) {
 			value = strtok_r(NULL, " ", &saveptr);
 			if (!value)

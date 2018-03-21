@@ -1,0 +1,32 @@
+#!/bin/sh
+
+echo -n "Initializing networking .................................... "
+netup
+if [ $? -ne 0 ]; then
+    echo -e "\e[;1m[FAIL]\e[0m"
+    exit 1
+else
+    echo -e "\e[;1m[ OK ]\e[0m"
+fi
+
+bootfile="$global.dhcp.bootfile"
+
+if [ -z "$bootfile" ]; then
+    bootfile="WeOS.bin"
+    echo "WARNING no bootfile supplied, using default ($bootfile)"
+fi
+
+echo -n "Transferring bootp image ................................... "
+cp /mnt/tftp/$bootfile /dev/ramload
+if [ $? -ne 0 ]; then
+    echo -e "\e[;1m[FAIL]\e[0m"
+    exit 1
+else
+    echo -e "\e[;1m[ OK ]\e[0m"
+fi
+
+global linux.bootargs.root="root=/dev/ram0"
+
+echo -n "Loading bootp image ........................................ "
+wmoboot /dev/ramload
+echo -e "\e[;1m[FAIL]\e[0m"

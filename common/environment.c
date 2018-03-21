@@ -38,9 +38,13 @@
 #include <environment.h>
 #include <globalvar.h>
 #include <libfile.h>
+#include <printk.h>
 #else
 # define errno_str(x) ("void")
 #define EXPORT_SYMBOL(x)
+#define pr_info printf
+#define pr_warn printf
+#define pr_err  printf
 #endif
 
 struct envfs_entry {
@@ -318,7 +322,7 @@ int envfs_save(const char *filename, const char *dirname, unsigned flags)
 
 	envfd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
 	if (envfd < 0) {
-		printf("could not open %s: %s\n", filename, errno_str());
+		pr_err("could not open %s: %s\n", filename, errno_str());
 		ret = -errno;
 		goto out1;
 	}
@@ -327,7 +331,7 @@ int envfs_save(const char *filename, const char *dirname, unsigned flags)
 
 	/* ENOSYS and EOPNOTSUPP aren't errors here, many devices don't need it */
 	if (ret && errno != ENOSYS && errno != EOPNOTSUPP) {
-		printf("could not unprotect %s: %s\n", filename, errno_str());
+		pr_warn("could not unprotect %s: %s\n", filename, errno_str());
 		goto out;
 	}
 
@@ -335,7 +339,7 @@ int envfs_save(const char *filename, const char *dirname, unsigned flags)
 
 	/* ENOSYS and EOPNOTSUPP aren't errors here, many devices don't need it */
 	if (ret && errno != ENOSYS && errno != EOPNOTSUPP) {
-		printf("could not erase %s: %s\n", filename, errno_str());
+		pr_warn("could not erase %s: %s\n", filename, errno_str());
 		goto out;
 	}
 
@@ -358,7 +362,7 @@ int envfs_save(const char *filename, const char *dirname, unsigned flags)
 
 	/* ENOSYS and EOPNOTSUPP aren't errors here, many devices don't need it */
 	if (ret && errno != ENOSYS && errno != EOPNOTSUPP) {
-		printf("could not protect %s: %s\n", filename, errno_str());
+		pr_warn("could not protect %s: %s\n", filename, errno_str());
 		goto out;
 	}
 
@@ -382,17 +386,17 @@ EXPORT_SYMBOL(envfs_save);
 static int envfs_check_super(struct envfs_super *super, size_t *size)
 {
 	if (ENVFS_32(super->magic) != ENVFS_MAGIC) {
-		printf("envfs: no envfs (magic mismatch) - envfs never written?\n");
+		pr_err("envfs: no envfs (magic mismatch) - envfs never written?\n");
 		return -EIO;
 	}
 
 	if (crc32(0, super, sizeof(*super) - 4) != ENVFS_32(super->sb_crc)) {
-		printf("wrong crc on env superblock\n");
+		pr_err("wrong crc on env superblock\n");
 		return -EIO;
 	}
 
 	if (super->major < ENVFS_MAJOR)
-		printf("envfs version %d.%d loaded into %d.%d\n",
+		pr_info("envfs version %d.%d loaded into %d.%d\n",
 			super->major, super->minor,
 			ENVFS_MAJOR, ENVFS_MINOR);
 
@@ -407,7 +411,7 @@ static int envfs_check_data(struct envfs_super *super, const void *buf, size_t s
 
 	crc = crc32(0, buf, size);
 	if (crc != ENVFS_32(super->crc)) {
-		printf("wrong crc on env\n");
+		pr_err("wrong crc on env\n");
 		return -EIO;
 	}
 
@@ -436,7 +440,7 @@ static int envfs_load_data(struct envfs_super *super, void *buf, size_t size,
 		buf += sizeof(struct envfs_inode);
 
 		if (ENVFS_32(inode->magic) != ENVFS_INODE_MAGIC) {
-			printf("envfs: wrong magic\n");
+			pr_err("envfs: wrong magic\n");
 			ret = -EIO;
 			goto out;
 		}
@@ -457,7 +461,7 @@ static int envfs_load_data(struct envfs_super *super, void *buf, size_t size,
 		buf += headerlen_full;
 
 		if (ENVFS_32(inode_end->magic) != ENVFS_INODE_END_MAGIC) {
-			printf("envfs: wrong inode_end_magic\n");
+			pr_err("envfs: wrong inode_end_magic\n");
 			ret = -EIO;
 			goto out;
 		}
@@ -468,7 +472,7 @@ static int envfs_load_data(struct envfs_super *super, void *buf, size_t size,
 
 		ret = stat(str, &s);
 		if (!ret && (flags & ENV_FLAG_NO_OVERWRITE)) {
-			printf("skip %s\n", str);
+			pr_err("skip %s\n", str);
 			goto skip;
 		}
 
@@ -482,7 +486,7 @@ static int envfs_load_data(struct envfs_super *super, void *buf, size_t size,
 
 				ret = symlink(buf, str);
 				if (ret < 0)
-					printf("symlink: %s -> %s : %s\n",
+					pr_err("symlink: %s -> %s : %s\n",
 							str, (char*)buf, strerror(-errno));
 			}
 			free(str);
@@ -490,7 +494,7 @@ static int envfs_load_data(struct envfs_super *super, void *buf, size_t size,
 			fd = open(str, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 			free(str);
 			if (fd < 0) {
-				printf("Open %s\n", errno_str());
+				pr_err("Open %s\n", errno_str());
 				ret = fd;
 				goto out;
 			}
@@ -564,9 +568,9 @@ int envfs_load(const char *filename, const char *dir, unsigned flags)
 
 	envfd = open(filename, O_RDONLY);
 	if (envfd < 0) {
-		printf("environment load %s: %s\n", filename, errno_str());
+		pr_err("environment load %s: %s\n", filename, errno_str());
 		if (errno == ENOENT)
-			printf("Maybe you have to create the partition.\n");
+			pr_err("Maybe you have to create the partition.\n");
 		return -1;
 	}
 
@@ -607,7 +611,7 @@ int envfs_load(const char *filename, const char *dir, unsigned flags)
 		}
 
 		if (!now) {
-			printf("%s: premature end of file\n", filename);
+			pr_err("%s: premature end of file\n", filename);
 			ret = -EINVAL;
 			goto out;
 		}

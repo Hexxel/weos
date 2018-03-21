@@ -1174,6 +1174,33 @@ config CMD_MIITOOL
 	  detailed MII status information, such as MII capabilities,
 	  current advertising mode, and link partner capabilities.
 
+config CMD_MDIO
+	tristate
+	depends on PHYLIB
+	prompt "mdio"
+	help
+	  The mdio command allows to read and write arbitrary
+	  registers on an MDIO bus.
+
+config CMD_RMON
+	tristate
+	depends on PHYLIB
+	prompt "rmon"
+	help
+	  The rmon command allows to read traffic stats for 
+	  a specific port on a bus(device).
+
+config CMD_MVCFG
+	tristate
+	depends on PHYLIB
+	prompt "mvcfg"
+	help
+          Simple command to handle a Marvell SOHO chipset.
+
+config CMD_CLK
+	tristate
+	depends on COMMON_CLK
+
 config CMD_PING
 	tristate
 	prompt "ping"
@@ -1244,6 +1271,13 @@ config CMD_ECHO_E
 	help
 	  Adds this command line option:
 	  -e	recognize escape sequences
+
+config CMD_INPUT
+	tristate
+	default n
+	prompt "input"
+	help
+	  Allow or deny console input, or show the current mode.
 
 config CMD_EDIT
 	tristate
@@ -1448,6 +1482,13 @@ config CMD_TIMEOUT
 		  -c	interrupt on Ctrl-C
 		  -r	interrupt on RETURN
 		  -s	silent mode
+
+config CMD_INPUT
+	tristate
+	default n
+	prompt "input"
+	help
+	  Allow or deny console input, or show the current mode.
 
 # end Console interaction commands
 endmenu
@@ -1864,6 +1905,21 @@ config CMD_SPI
 		  -m MODE	SPI mode (default 0)
 		  -f HZ		max speed frequency, in Hz (default 1 MHz)
 		  -w BIT	bits per word (default 8)
+		  -v		verbose
+
+config CMD_MAXQ1061
+	bool
+	depends on SPI
+	prompt "maxq1061 command"
+	help
+	  Write/read from MAXQ1061 SPI device
+
+	  Usage: spi [-bcfv] CMD LEN DATA...
+
+	  Options:
+		  -b BUS	SPI bus number (default 0)
+		  -c		chip select (default 2)
+		  -f HZ		max speed frequency, in Hz (default 1 MHz)
 		  -v		verbose
 
 config CMD_LED_TRIGGER
