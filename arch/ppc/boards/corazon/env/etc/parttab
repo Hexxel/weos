@@ -1,0 +1,7 @@
+#!/bin/sh
+
+addpart -n /dev/ram0 128M@128M(ramload)
+
+addpart -n /dev/nor0 56M@000(primary)
+addpart -n /dev/nor0 56M@56M(secondary)
+addpart -n /dev/nor0 15M@112M(config)

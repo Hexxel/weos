@@ -8,11 +8,14 @@ struct sys_info {
 	unsigned long freqSystemBus;
 	unsigned long freqDDRBus;
 	unsigned long freqLocalBus;
+	unsigned long freqPLL1;
 };
 
 unsigned long fsl_get_bus_freq(ulong dummy);
 unsigned long fsl_get_ddr_freq(ulong dummy);
 unsigned long fsl_get_timebase_clock(void);
+unsigned long fsl_get_eth_freq(void);
 unsigned long fsl_get_i2c_freq(void);
+unsigned long fsl_get_uart_freq(void);
 void fsl_get_sys_info(struct sys_info *sysInfo);
 #endif /* __ASM_ARCH_CLOCKS_H */

@@ -15,12 +15,8 @@
 
 #include <asm-generic/barebox.lds.h>
 
-#ifdef CONFIG_RESET_VECTOR_ADDRESS
-#define RESET_VECTOR_ADDRESS    CONFIG_RESET_VECTOR_ADDRESS
-#else
-#define RESET_VECTOR_ADDRESS    0xfffffffc
-#endif
-
+#define RESET_VECTOR_ADDRESS ((CONFIG_TEXT_BASE) + (CONFIG_BAREBOX_MAX_IMAGE_SIZE) - 4)
+        
 OUTPUT_ARCH("powerpc")
 ENTRY(_start_e500)
 

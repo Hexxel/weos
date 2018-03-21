@@ -7,7 +7,11 @@
 #include <asm/processor.h>
 
 /* bytes per L1 cache line. CPU dependent */
+#if !defined (CONFIG_E500MC)
 #define L1_CACHE_SHIFT	5
+#else
+#define L1_CACHE_SHIFT	6
+#endif
 #define L1_CACHE_BYTES	(1 << L1_CACHE_SHIFT)
 
 #ifndef CACHELINE_SIZE

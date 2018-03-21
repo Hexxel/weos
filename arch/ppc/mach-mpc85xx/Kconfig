@@ -5,17 +5,21 @@ config MMU
 
 config BTB
 	bool
-	default y
+	default y if P2020RDB || P1022DS || DA923RC || CORAZON || CORONET
+
+config BAREBOX_MAX_IMAGE_SIZE
+	hex
+	default 0x80000
 
 config TEXT_BASE
 	hex
-	default 0xeff80000 if P1010RDB || P2020RDB || P1022DS
+	default 0xeff80000 if P1010RDB || P2020RDB || P1022DS || CORAZON || CORONET
 	default 0xfff80000 if DA923RC
 
-config RESET_VECTOR_ADDRESS
+config TEXT_BASE
 	hex
 	default 0xfffffffc if DA923RC
-	default 0xeffffffc if P1010RDB || P2020RDB || P1022DS
+	default 0xeffffffc if P1010RDB || P2020RDB || P1022DS || CORAZON || CORONET
 
 config MPC85xx
 	bool
@@ -29,47 +33,91 @@ config E500
 	bool
 	default y
 
+config E500MC
+	bool
+	default y if CORONET
+
+config SYS_CACHE_STASHING
+	bool
+	default y if CORONET
+
+config BACKSIDE_L2_CACHE
+	bool
+	default y if CORONET
+	
+config ENABLE_36BIT_PHYS
+	bool
+	default y if CORONET
+
+config PHYS_ADDR_T_64BIT
+	bool
+	default y if CORONET
+
+config E500_LEGACY_SMP
+	bool
+	default y if CORAZON || CORONET
+
+config BBOX_PLATFORM
+	string
+	default "corazon" if CORAZON
+	default "coronet" if CORONET
+   
 choice
 	prompt "Select your board"
 config P1010RDB
 	bool "P1010RDB"
-    select P1010
-    select DDR_SPD
-    select FSL_DDR3
+	select P1010
+	select DDR_SPD
+	select FSL_DDR3
 	help
 	  Say Y here if you are using the Freescale P1010RDB
 
 config P2020RDB
 	bool "P2020RDB"
-    select P2020
-    select FSL_ELBC
+	select P2020
+ 	select FSL_ELBC
 	help
 	  Say Y here if you are using the Freescale P2020RDB
 
 config P1022DS
 	bool "P1022DS"
-    select P1022
-    select DDR_SPD
-    select FSL_DDR3
-    select FSL_ELBC
+	select P1022
+	select DDR_SPD
+	select FSL_DDR3
+	select FSL_ELBC
 	help
 	  Say Y here if you are using the Freescale P1022DS
 
 config DA923RC
 	bool "DA923RC"
-    select MPC8544
-    select DDR_SPD
-    select FSL_DDR2
+	select MPC8544
+	select DDR_SPD
+	select FSL_DDR2
 	help
 	Say Y here if you are using the GE Intelligent Platforms DA923RC
+
+config CORAZON
+	bool "CORAZON"
+	select POLLER
+	select WATCHDOG
+	help
+	Say Y here if you are using the Westermo Corazon
+
+config CORONET
+	bool "CORONET"
+	select POLLER
+	select WATCHDOG
+        select GPIOLIB
+	help
+	Say Y here if you are using the Westermo Coronet
 endchoice
 endif
 
 config P1010
-    select FSL_IFC
-    select FSL_ERRATUM_IFC_A002769
-    select FSL_ERRATUM_P1010_A003549
-    select FSL_ERRATUM_IFC_A003399
+	select FSL_IFC
+	select FSL_ERRATUM_IFC_A002769
+	select FSL_ERRATUM_P1010_A003549
+	select FSL_ERRATUM_IFC_A003399
 	bool
 
 config P2020
@@ -80,6 +128,16 @@ config P1022
 
 config MPC8544
 	bool
+
+if CORONET
+config T1023
+	bool
+	default y
+
+config FSL_DDR3
+	bool
+	default y
+endif
 
 config FSL_DDR2
 	bool
@@ -92,13 +150,38 @@ config FSL_IFC
 
 config FSL_ELBC
 	bool
+	default y if P2020RDB || P1022DS || CORAZON || CORONET
 
 config FSL_ERRATUM_IFC_A002769
-    bool
+	bool
 
 config FSL_ERRATUM_IFC_A003399
-    bool
+	bool
 
 config FSL_ERRATUM_P1010_A003549
-    bool
+	bool
 
+
+if CORAZON
+config P1020
+	bool
+	default y
+
+config FSL_DDR3
+	bool
+	default y
+
+config BOARD_RESET
+	bool
+	default y
+endif
+
+if CORONET
+config T1023
+	bool
+	default y
+
+config FSL_DDR3
+	bool
+	default y
+endif

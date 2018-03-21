@@ -28,19 +28,45 @@
 
 #define FSL_HW_NUM_LAWS FSL_NUM_LAWS
 
+#ifdef FSL_LAW_EXT
+#define LAW_BASE (CFG_IMMR + 0xc00)
+#define LAWBARH_ADDR(x)    ((u32 *)LAW_BASE + 4*(x) + 0)
+#define LAWBARL_ADDR(x)    ((u32 *)LAW_BASE + 4*(x) + 1)
+#define LAWAR_ADDR(x)      ((u32 *)LAW_BASE + 4*(x) + 2)
+#define LAWBAR_SHIFT 0
+#else
 #define LAW_BASE (CFG_IMMR + 0xc08)
 #define LAWAR_ADDR(x) ((u32 *)LAW_BASE + 8 * (x) + 2)
 #define LAWBAR_ADDR(x) ((u32 *)LAW_BASE + 8 * (x))
 #define LAWBAR_SHIFT 12
+#endif
+
+/* CORONET#0>md 0xfe000c00
+0_fe000c00 : 0000000f e8000000 81f0001b 00000000  ................
+0_fe000c10 : 0000000f f4000000 81800018 00000000  ................
+0_fe000c20 : 0000000f f6000000 83c00018 00000000  ................
+0_fe000c30 : 0000000f ffdf0000 81f0000b 00000000  ................
+*/
 
 static inline phys_addr_t fsl_get_law_base_addr(int idx)
 {
+#ifdef CONFIG_ENABLE_36BIT_PHYS
+	return (phys_addr_t)
+		((u64)in_be32(LAWBARH_ADDR(idx)) << 32) |
+		in_be32(LAWBARL_ADDR(idx));
+#else
 	return (phys_addr_t)in_be32(LAWBAR_ADDR(idx)) << LAWBAR_SHIFT;
+#endif
 }
 
 static inline void fsl_set_law_base_addr(int idx, phys_addr_t addr)
 {
+#ifdef CONFIG_ENABLE_36BIT_PHYS
+	out_be32(LAWBARL_ADDR(idx), addr & 0xffffffff);
+	out_be32(LAWBARH_ADDR(idx), (u64)addr >> 32);
+#else
 	out_be32(LAWBAR_ADDR(idx), addr >> LAWBAR_SHIFT);
+#endif
 }
 
 static void fsl_set_law(u8 idx, phys_addr_t addr, enum law_size sz,

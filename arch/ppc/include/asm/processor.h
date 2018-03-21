@@ -224,6 +224,7 @@
 #define   HID0_DCFI	(1<<10)		/* Data Cache Flash Invalidate */
 #define   HID0_DCI	HID0_DCFI
 #define   HID0_SPD	(1<<9)		/* Speculative disable */
+#define   HID0_ENMAS7   (1<<7)          /* Enable MAS7 Update for 36-bit phys */
 #define   HID0_SGE	(1<<7)		/* Store Gathering Enable */
 #define   HID0_SIED	HID_SGE		/* Serial Instr. Execution [Disable] */
 #define   HID0_DCFA	(1<<6)		/* Data Cache Flush Assist */
@@ -324,11 +325,16 @@
 #else
 #define SPRN_TCR        0x154   /* Book E Timer Control Register */
 #endif /* CONFIG_BOOKE */
+#ifdef CONFIG_E500MC
+#define  TCR_WP(x)		(((64-x)&0x3)<<30)| \
+				(((64-x)&0x3c)<<15) /* WDT Period 2^x clocks*/
+#else
 #define   TCR_WP(x)		(((x)&0x3)<<30)	/* WDT Period */
 #define     WP_2_17		0		/* 2^17 clocks */
 #define     WP_2_21		1		/* 2^21 clocks */
 #define     WP_2_25		2		/* 2^25 clocks */
 #define     WP_2_29		3		/* 2^29 clocks */
+#endif /* CONFIG_E500 */
 #define   TCR_WRC(x)		(((x)&0x3)<<28)	/* WDT Reset Control */
 #define     WRC_NONE		0		/* No reset will occur */
 #define     WRC_CORE		1		/* Core reset will occur */
@@ -416,6 +422,8 @@
 
 /* e500 definitions */
 #define SPRN_L1CFG0     0x203   /* L1 Cache Configuration Register 0 */
+#define SPRN_L1CFG1     0x204   /* L1 Cache Configuration Register 1 */
+#define SPRN_L2CFG0     0x207   /* L2 Cache Configuration Register 0 */
 #define SPRN_L1CSR0     0x3f2   /* L1 Cache Control and Status Register 0 */
 #define   L1CSR0_CPE            0x00010000      /* Data Cache Parity Enable */
 #define   L1CSR0_DCLFR          0x00000100      /* D-Cache Lock Flash Reset */
@@ -426,6 +434,27 @@
 #define   L1CSR1_ICLFR          0x00000100      /* I-Cache Lock Flash Reset */
 #define   L1CSR1_ICFI           0x00000002      /* Instruction Cache Flash Invalidate */
 #define   L1CSR1_ICE            0x00000001      /* Instruction Cache Enable */
+#define SPRN_L1CSR2 0x25e   /* L1 Data Cache Control and Status Register 2 */
+#define SPRN_L2CSR0 0x3f9   /* L2 Data Cache Control and Status Register 0 */
+#define   L2CSR0_L2E        0x80000000  /* L2 Cache Enable */
+#define   L2CSR0_L2PE       0x40000000  /* L2 Cache Parity/ECC Enable */
+#define   L2CSR0_L2WP       0x1c000000  /* L2 I/D Way Partioning */
+#define   L2CSR0_L2CM       0x03000000  /* L2 Cache Coherency Mode */
+#define   L2CSR0_L2FI       0x00200000  /* L2 Cache Flash Invalidate */
+#define   L2CSR0_L2IO       0x00100000  /* L2 Cache Instruction Only */
+#define   L2CSR0_L2DO       0x00010000  /* L2 Cache Data Only */
+#define   L2CSR0_L2REP      0x00003000  /* L2 Line Replacement Algo */
+#define   L2CSR0_L2FL       0x00000800  /* L2 Cache Flush */
+#define   L2CSR0_L2LFC      0x00000400  /* L2 Cache Lock Flash Clear */
+#define   L2CSR0_L2LOA      0x00000080  /* L2 Cache Lock Overflow Allocate */
+#define   L2CSR0_L2LO       0x00000020  /* L2 Cache Lock Overflow */
+#define   L2CSR0_L2REP_SPLRUAGE 0x00000000  /* L2REP Streaming PLRU with Aging */
+#define   L2CSR0_L2REP_FIFO 0x00001000  /* L2REP FIFO */
+#define   L2CSR0_L2REP_SPLRU    0x00002000  /* L2REP Streaming PLRU */
+#define   L2CSR0_L2REP_PLRU 0x00003000  /* L2REP PLRU */
+#define SPRN_L2CSR1 0x3fa   /* L2 Data Cache Control and Status Register 1 */
+
+#define   L2CSR0_L2REP_MODE L2CSR0_L2REP_SPLRUAGE
 
 #define SPRN_TLB0CFG   0x2B0   /* TLB 0 Config Register */
 #define SPRN_TLB1CFG   0x2B1   /* TLB 1 Config Register */
@@ -610,8 +639,13 @@
 #define MCSRR0	SPRN_MCSRR0
 #define MCSRR1	SPRN_MCSRR1
 #define L1CSR0 	SPRN_L1CSR0
-#define L1CSR1	SPRN_L1CSR1
-#define L1CFG0 SPRN_L1CFG0
+#define L1CSR1  SPRN_L1CSR1
+#define L1CSR2  SPRN_L1CSR2
+#define L1CFG0  SPRN_L1CFG0
+#define L1CFG1  SPRN_L1CFG1
+#define L2CFG0  SPRN_L2CFG0
+#define L2CSR0  SPRN_L2CSR0
+#define L2CSR1  SPRN_L2CSR1
 #define MCSR	SPRN_MCSR
 #define MMUCSR0	SPRN_MMUCSR0
 #define BUCSR	SPRN_BUCSR

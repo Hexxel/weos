@@ -124,6 +124,11 @@ unsigned long fsl_get_timebase_clock(void)
 	return (sysinfo.freqSystemBus + 4UL)/8UL;
 }
 
+unsigned long fsl_get_uart_freq(void)
+{
+	return fsl_get_bus_freq(0);
+}
+
 unsigned long fsl_get_i2c_freq(void)
 {
 	uint svr;

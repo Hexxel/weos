@@ -16,6 +16,8 @@ board-$(CONFIG_P1010RDB)			:= freescale-p1010rdb
 board-$(CONFIG_P2020RDB)			:= freescale-p2020rdb
 board-$(CONFIG_P1022DS)				:= freescale-p1022ds
 board-$(CONFIG_DA923RC)				:= geip-da923rc
+board-$(CONFIG_CORAZON)				:= corazon
+board-$(CONFIG_CORONET)				:= coronet
 
 machine-$(CONFIG_ARCH_MPC5200)			:= mpc5xxx
 machine-$(CONFIG_ARCH_MPC85XX)			:= mpc85xx

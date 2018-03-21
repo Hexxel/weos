@@ -1,0 +1,12 @@
+#!/bin/sh
+
+ADDR_APPEND=0xffffffff
+
+export kernel_load=0x00000000
+export ramload_base=$ADDR_APPEND
+
+export root_primary="/dev/mtdblock0"
+export root_secondary="/dev/mtdblock1"
+
+global linux.bootargs.console="console=ttyS0,115200"
+global of_partition_binding=donttouch

@@ -61,16 +61,26 @@ enum law_trgt_if {
 	LAW_TRGT_IF_DDR_INTRLV = 0x0b,
 	LAW_TRGT_IF_RIO = 0x0c,
 	LAW_TRGT_IF_RIO_2 = 0x0d,
+#if defined(CONFIG_T1023)
+	LAW_TRGT_IF_DDR = 0x10,
+#else
 	LAW_TRGT_IF_DDR = 0x0f,
+#endif
 	LAW_TRGT_IF_DDR_2 = 0x16,	/* 2nd controller */
+        LAW_TRGT_IF_BMAN = 0x18,
+        LAW_TRGT_IF_DCSR = 0x1d,
+	LAW_TRGT_IF_IFC = 0x1f,
+        LAW_TRGT_IF_QMAN = 0x3c,
+
 };
 #define LAW_TRGT_IF_DDR_1	LAW_TRGT_IF_DDR
 #define LAW_TRGT_IF_PCI_1	LAW_TRGT_IF_PCI
 #define LAW_TRGT_IF_PCIX	LAW_TRGT_IF_PCI
 #define LAW_TRGT_IF_PCIE_2	LAW_TRGT_IF_PCI_2
 #define LAW_TRGT_IF_RIO_1	LAW_TRGT_IF_RIO
+#ifndef CONFIG_CORONET
 #define LAW_TRGT_IF_IFC		LAW_TRGT_IF_LBC
-
+#endif
 
 #if defined(CONFIG_P2020)
 #define LAW_TRGT_IF_PCIE_3	LAW_TRGT_IF_PCI

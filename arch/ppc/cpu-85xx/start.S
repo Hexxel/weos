@@ -20,11 +20,16 @@
 #include <asm/ppc_defs.h>
 #include <asm/cache.h>
 
+#include <generated/autoconf.h>
+#include <generated/utsrelease.h>
+
 #include <mach/mpc85xx.h>
 #include <mach/mmu.h>
 
 #undef	MSR_KERNEL
 #define MSR_KERNEL ( MSR_ME )	/* Machine Check */
+
+#define LAW_EN		0x80000000
 
 /*
  * Set up GOT: Global Offset Table
@@ -105,23 +110,37 @@ _start_e500:
 	isync
 	.endm
 
-	.macro  create_tlb0_entry esel ts tsize epn wimg rpn perm phy_high \
-				scratch
-	lis \scratch, FSL_BOOKE_MAS0(0, \esel, 0)@h
-	ori \scratch, \scratch, FSL_BOOKE_MAS0(0, \esel, 0)@l
-	mtspr   MAS0, \scratch
-	lis \scratch, FSL_BOOKE_MAS1(1, 0, 0, \ts, \tsize)@h
-	ori \scratch, \scratch, FSL_BOOKE_MAS1(1, 0, 0, \ts, \tsize)@l
-	mtspr   MAS1, \scratch
-	lis \scratch, FSL_BOOKE_MAS2(\epn, \wimg)@h
-	ori \scratch, \scratch, FSL_BOOKE_MAS2(\epn, \wimg)@l
-	mtspr   MAS2, \scratch
-	lis \scratch, FSL_BOOKE_MAS3(\rpn, 0, \perm)@h
-	ori \scratch, \scratch, FSL_BOOKE_MAS3(\rpn, 0, \perm)@l
-	mtspr   MAS3, \scratch
-	lis \scratch, \phy_high@h
-	ori \scratch, \scratch, \phy_high@l
-	mtspr   MAS7, \scratch
+	.macro	create_tlb0_entry esel ts tsize epn wimg rpn perm phy_high scratch
+	lis	\scratch, FSL_BOOKE_MAS0(0, \esel, 0)@h
+	ori	\scratch, \scratch, FSL_BOOKE_MAS0(0, \esel, 0)@l
+	mtspr	MAS0, \scratch
+	lis	\scratch, FSL_BOOKE_MAS1(1, 0, 0, \ts, \tsize)@h
+	ori	\scratch, \scratch, FSL_BOOKE_MAS1(1, 0, 0, \ts, \tsize)@l
+	mtspr	MAS1, \scratch
+	lis	\scratch, FSL_BOOKE_MAS2(\epn, \wimg)@h
+	ori	\scratch, \scratch, FSL_BOOKE_MAS2(\epn, \wimg)@l
+	mtspr	MAS2, \scratch
+	lis	\scratch, FSL_BOOKE_MAS3(\rpn, 0, \perm)@h
+	ori	\scratch, \scratch, FSL_BOOKE_MAS3(\rpn, 0, \perm)@l
+	mtspr	MAS3, \scratch
+	lis	\scratch, \phy_high@h
+	ori	\scratch, \scratch, \phy_high@l
+	mtspr	MAS7, \scratch
+	isync
+	msync
+	tlbwe
+	isync
+	.endm
+
+	.macro	delete_tlb0_entry esel epn wimg scratch
+	lis	\scratch, FSL_BOOKE_MAS0(0, \esel, 0)@h
+	ori	\scratch, \scratch, FSL_BOOKE_MAS0(0, \esel, 0)@l
+	mtspr	MAS0, \scratch
+	li	\scratch, 0
+	mtspr	MAS1, \scratch
+	lis	\scratch, FSL_BOOKE_MAS2(\epn, \wimg)@h
+	ori	\scratch, \scratch, FSL_BOOKE_MAS2(\epn, \wimg)@l
+	mtspr	MAS2, \scratch
 	isync
 	msync
 	tlbwe
@@ -181,9 +200,15 @@ _start_e500:
 
 	/* Enable Time Base and Select Time Base Clock */
 	lis	r0,HID0_EMCP@h		/* Enable machine check */
+#if defined(CONFIG_ENABLE_36BIT_PHYS)
+	ori	r0,r0,HID0_ENMAS7@l	/* Enable MAS7 */
+#endif
+#if !defined(CONFIG_E500MC)
 	ori	r0,r0,HID0_TBEN@l	/* Enable Timebase */
+#endif
 	mtspr	HID0,r0
 
+#if !defined(CONFIG_E500MC)
 	li	r0,(HID1_ASTME|HID1_ABE)@l	/* Addr streaming & broadcast */
 	mfspr	r3,PVR
 	andi.	r3,r3, 0xff
@@ -193,12 +218,18 @@ _start_e500:
 	ori r0, r0, HID1_MBDD@l
 1:
 	mtspr	HID1,r0
+#endif
 
 	/* Enable Branch Prediction */
 #if defined(CONFIG_BTB)
 	lis	r0,BUCSR_ENABLE@h
 	ori	r0,r0,BUCSR_ENABLE@l
 	mtspr	SPRN_BUCSR,r0
+#endif
+
+/* Ramload, skip TLB setup */
+#if CONFIG_TEXT_BASE == 0
+	b _start_cont
 #endif
 
 /*
@@ -301,88 +332,162 @@ nexti:	mflr	r1		/* R1 = our PC */
 		0, r6
 
 #endif
+
 /*
- * Relocate CCSR, if necessary. We relocate CCSR if (obviously) the default
- * location is not where we want it. This typically happens on a 36-bit
+ * Relocate CCSR, if necessary.  We relocate CCSR if (obviously) the default
+ * location is not where we want it.  This typically happens on a 36-bit
  * system, where we want to move CCSR to near the top of 36-bit address space.
  *
  * To move CCSR, we create two temporary TLBs, one for the old location, and
- * another for the new location. On CoreNet systems, we also need to create
+ * another for the new location.  On CoreNet systems, we also need to create
  * a special, temporary LAW.
  *
  * As a general rule, TLB0 is used for short-term TLBs, and TLB1 is used for
  * long-term TLBs, so we use TLB0 here.
  */
+#ifdef CONFIG_ENABLE_36BIT_PHYS
 #if (CFG_CCSRBAR_DEFAULT != CFG_CCSRBAR_PHYS)
+#if !defined(CFG_CCSRBAR_PHYS_HIGH) || !defined(CFG_CCSRBAR_PHYS_LOW)
+#error "CFG_CCSRBAR_PHYS_HIGH and CFG_CCSRBAR_PHYS_LOW must be defined."
+#endif
+
 create_ccsr_new_tlb:
 	/*
-	 * Create a TLB for the new location of CCSR. Register R8 is reserved
-	 * for the virtual address of this TLB (CFG_CCSRBAR).
+	 * Create a TLB for the new location of CCSR.  Register R8 is reserved
+	 * for the virtual address of this TLB (CONFIG_SYS_CCSRBAR).
 	 */
 	lis	r8, CFG_CCSRBAR@h
 	ori	r8, r8, CFG_CCSRBAR@l
 	lis	r9, (CFG_CCSRBAR + 0x1000)@h
 	ori	r9, r9, (CFG_CCSRBAR + 0x1000)@l
 	create_tlb0_entry 0, \
-	0, BOOKE_PAGESZ_4K, \
-	CFG_CCSRBAR, MAS2_I|MAS2_G, \
-	CFG_CCSRBAR_PHYS, MAS3_SW|MAS3_SR, \
-	0, r3
-
+		0, BOOKE_PAGESZ_4K, \
+		CFG_CCSRBAR, MAS2_I|MAS2_G, \
+		CFG_CCSRBAR_PHYS_LOW, MAS3_SW|MAS3_SR, \
+		CFG_CCSRBAR_PHYS_HIGH, r3
 	/*
-	 * Create a TLB for the current location of CCSR. Register R9 is
-	 * reserved for the virtual address of this TLB (CFG_CCSRBAR + 0x1000).
+	 * Create a TLB for the current location of CCSR.  Register R9 is reserved
+	 * for the virtual address of this TLB (CONFIG_SYS_CCSRBAR + 0x1000).
 	 */
 create_ccsr_old_tlb:
 	create_tlb0_entry 1, \
-	0, BOOKE_PAGESZ_4K, \
-	CFG_CCSRBAR + 0x1000, MAS2_I|MAS2_G, \
-	CFG_CCSRBAR_DEFAULT, MAS3_SW|MAS3_SR, \
-	0, r3
+		0, BOOKE_PAGESZ_4K, \
+		CFG_CCSRBAR + 0x1000, MAS2_I|MAS2_G, \
+		CFG_CCSRBAR_DEFAULT, MAS3_SW|MAS3_SR, \
+		0, r3 /* The default CCSR address is always a 32-bit number */
+
 
 	/*
-	 * We have a TLB for what we think is the current (old) CCSR. Let's
+	 * We have a TLB for what we think is the current (old) CCSR.  Let's
 	 * verify that, otherwise we won't be able to move it.
-	 * CFG_CCSRBAR_DEFAULT is always a 32-bit number, so we only
+	 * CONFIG_SYS_CCSRBAR_DEFAULT is always a 32-bit number, so we only
 	 * need to compare the lower 32 bits of CCSRBAR on CoreNet systems.
 	 */
 verify_old_ccsr:
-	lis	r0, CFG_CCSRBAR_DEFAULT@h
-	ori	r0, r0, CFG_CCSRBAR_DEFAULT@l
-	lwz	r1, 0(r9)
-	slwi	r1, r1, 12
+	lis     r0, CFG_CCSRBAR_DEFAULT@h
+	ori     r0, r0, CFG_CCSRBAR_DEFAULT@l
+	lwz	r1, 4(r9)		/* CCSRBARL */
+
 	cmpl	0, r0, r1
 
 	/*
-	 * If the value we read from CCSRBAR is not what we expect, then
-	 * enter an infinite loop. This will at least allow a debugger to
-	 * halt execution and examine TLBs, etc. There's no point in going
+	 * If the value we read from CCSRBARL is not what we expect, then
+	 * enter an infinite loop.  This will at least allow a debugger to
+	 * halt execution and examine TLBs, etc.  There's no point in going
 	 * on.
 	 */
 infinite_debug_loop:
-	bne infinite_debug_loop
+	bne	infinite_debug_loop
+
+#define CCSR_LAWBARH0	(CFG_CCSRBAR + 0x1000)
+#define LAW_SIZE_4K	0xb
+#define CCSRBAR_LAWAR	(LAW_EN | (0x1e << 20) | LAW_SIZE_4K)
+#define CCSRAR_C	0x80000000	/* Commit */
+
+create_temp_law:
+	/*
+	 * On CoreNet systems, we create the temporary LAW using a special LAW
+	 * target ID of 0x1e.  LAWBARH is at offset 0xc00 in CCSR.
+	 */
+	lis     r0, CFG_CCSRBAR_PHYS_HIGH@h
+	ori     r0, r0, CFG_CCSRBAR_PHYS_HIGH@l
+	lis     r1, CFG_CCSRBAR_PHYS_LOW@h
+	ori     r1, r1, CFG_CCSRBAR_PHYS_LOW@l
+	lis     r2, CCSRBAR_LAWAR@h
+	ori     r2, r2, CCSRBAR_LAWAR@l
+
+	stw     r0, 0xc00(r9)	/* LAWBARH0 */
+	stw     r1, 0xc04(r9)	/* LAWBARL0 */
+	sync
+	stw     r2, 0xc08(r9)	/* LAWAR0 */
 
 	/*
-	 * Read the current value of CCSRBAR using a load word instruction
-	 * followed by an isync. This forces all accesses to configuration
-	 * space to complete.
+	 * Read back from LAWAR to ensure the update is complete.  e500mc
+	 * cores also require an isync.
+	 */
+	lwz	r0, 0xc08(r9)	/* LAWAR0 */
+	isync
+
+	/*
+	 * Read the current CCSRBARH and CCSRBARL using load word instructions.
+	 * Follow this with an isync instruction. This forces any outstanding
+	 * accesses to configuration space to completion.
+	 */
+read_old_ccsrbar:
+	lwz	r0, 0(r9)	/* CCSRBARH */
+	lwz	r0, 4(r9)	/* CCSRBARL */
+	isync
+
+	/*
+	 * Write the new values for CCSRBARH and CCSRBARL to their old
+	 * locations.  The CCSRBARH has a shadow register. When the CCSRBARH
+	 * has a new value written it loads a CCSRBARH shadow register. When
+	 * the CCSRBARL is written, the CCSRBARH shadow register contents
+	 * along with the CCSRBARL value are loaded into the CCSRBARH and
+	 * CCSRBARL registers, respectively.  Follow this with a sync
+	 * instruction.
 	 */
 write_new_ccsrbar:
+	lis	r0, CFG_CCSRBAR_PHYS_HIGH@h
+	ori	r0, r0, CFG_CCSRBAR_PHYS_HIGH@l
+	lis	r1, CFG_CCSRBAR_PHYS_LOW@h
+	ori	r1, r1, CFG_CCSRBAR_PHYS_LOW@l
+	lis	r2, CCSRAR_C@h
+	ori	r2, r2, CCSRAR_C@l
+
+	stw	r0, 0(r9)	/* Write to CCSRBARH */
+	sync			/* Make sure we write to CCSRBARH first */
+	stw	r1, 4(r9)	/* Write to CCSRBARL */
 	sync
-	lwz r0, 0(r9)
-	isync
-	lis	r0, (CFG_CCSRBAR_PHYS >> 12)@h
-	ori	r0, r0, (CFG_CCSRBAR_PHYS >> 12)@l
-	stw	r0, 0(r9)
-	sync
-	isync
 
 	/*
-	 * Read the contents of CCSRBAR from its new location, followed by
-	 * another isync.
+	 * Write a 1 to the commit bit (C) of CCSRAR at the old location.
+	 * Follow this with a sync instruction.
 	 */
-	 lwz	r0, 0(r8)
-	 isync
+	stw	r2, 8(r9)
+	sync
+
+	/* Delete the temporary LAW */
+delete_temp_law:
+	li	r1, 0
+	stw	r1, 0xc08(r8)
+	sync
+	stw	r1, 0xc00(r8)
+	stw	r1, 0xc04(r8)
+	sync
+
+	/* Delete the temporary TLBs */
+delete_temp_tlbs:
+	delete_tlb0_entry 0, CFG_CCSRBAR, MAS2_I|MAS2_G, r3
+	delete_tlb0_entry 1, CFG_CCSRBAR + 0x1000, MAS2_I|MAS2_G, r3
+
+#endif /* #if !defined(CFG_CCSRBAR_PHYS_HIGH) || !defined(CFG_CCSRBAR_PHYS_LOW) */
+#endif /* CONFIG_ENABLE_36BIT_PHYS */
+
+#ifdef CONFIG_SYS_CACHE_STASHING
+	/* set stash id to (coreID) * 2 + 32 + L1 CT (0) */
+	li	r2,(32 + 0)
+	mtspr	L1CSR2,r2
 #endif
 
 	/* Enable/invalidate the I-Cache */
@@ -480,6 +585,9 @@ switch_as:
 	.globl	_start
 _start:
 	.long	0x62626F78		/* Magic Number */
+	.asciz CONFIG_BBOX_PLATFORM
+	.align	4
+	.asciz UTS_RELEASE
 
 	.align	4
 	.globl	_start_cont
@@ -501,6 +609,7 @@ _start_cont:
 	mtmsr	r3
 	isync
 
+	bl	cpu_init_f
 	bl      initdram
 	b       relocate_code
 	isync
@@ -955,6 +1064,9 @@ e500_write_tlb:
 	mtspr	MAS1,r4
 	mtspr	MAS2,r5
 	mtspr	MAS3,r6
+#ifdef CONFIG_ENABLE_36BIT_PHYS
+	mtspr	MAS7,r7
+#endif
 	li	r3,0
 	isync
 	tlbwe
@@ -975,6 +1087,9 @@ e500_write_tlb:
  */
 	.globl	relocate_code
 relocate_code:
+#ifdef CONFIG_E500_LEGACY_SMP
+	subi    r3, r3, 0x1000
+#endif
 	mr	r9, r3			/* Save end of RAM 	*/
 
 	GET_GOT

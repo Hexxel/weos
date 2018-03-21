@@ -133,8 +133,53 @@ void fsl_erratum_ifc_a003399(void)
 void fsl_erratum_ifc_a003399(void) {}
 #endif
 
+static inline void fsl_init_tb(void)
+{
+#ifdef CONFIG_E500MC
+	void __iomem *rcpm = (void __iomem *)MPC85xx_RCPM_ADDR;
+
+	out_be32(rcpm + MPC85xx_RCPM_PCTBENR_OFFSET, 1);
+#endif
+}
+
+#ifndef CONFIG_ENABLE_36BIT_PHYS
+static void fsl_setup_ccsrbar(void)
+{
+	u32 temp;
+	u32 mas0, mas1, mas2, mas3, mas7;
+	u32 *ccsr_virt = (u32 *)(CFG_CCSRBAR + 0x1000);
+
+	mas0 = MAS0_TLBSEL(0) | MAS0_ESEL(1);
+	mas1 = MAS1_VALID | MAS1_TID(0) | MAS1_TS | MAS1_TSIZE(BOOKE_PAGESZ_4K);
+	mas2 = FSL_BOOKE_MAS2(CFG_CCSRBAR + 0x1000, MAS2_I|MAS2_G);
+	mas3 = FSL_BOOKE_MAS3(CFG_CCSRBAR_DEFAULT, 0, MAS3_SW|MAS3_SR);
+	mas7 = FSL_BOOKE_MAS7(CFG_CCSRBAR_DEFAULT);
+
+	e500_write_tlb(mas0, mas1, mas2, mas3, mas7);
+
+	temp = in_be32(ccsr_virt);
+	out_be32(ccsr_virt, CFG_CCSRBAR_PHYS >> 12);
+	temp = in_be32((u32 *)CFG_CCSRBAR);
+}
+#endif /* CONFIG_ENABLE_36BIT_PHYS */
+
 int fsl_l2_cache_init(void)
 {
+#ifdef CONFIG_E500MC
+	/* invalidate the L2 cache */
+	mtspr(SPRN_L2CSR0, (L2CSR0_L2FI|L2CSR0_L2LFC));
+	while (mfspr(SPRN_L2CSR0) & (L2CSR0_L2FI|L2CSR0_L2LFC))
+		;
+
+	/* set stash id to (coreID) * 2 + 32 + L2 (1) */
+	mtspr(SPRN_L2CSR1, (32 + 1));
+
+	/* enable the cache */
+	mtspr(SPRN_L2CSR0, L2CSR0_L2E);
+
+	while (!(mfspr(SPRN_L2CSR0) & L2CSR0_L2E))
+		;
+#else
 	void __iomem *l2cache = (void __iomem *)MPC85xx_L2_ADDR;
 	uint cache_ctl;
 	uint svr, ver;
@@ -171,7 +216,7 @@ int fsl_l2_cache_init(void)
 		out_be32(l2cache + MPC85xx_L2_CTL_OFFSET, cache_ctl);
 		asm("msync;isync");
 	}
-
+#endif
 	return 0;
 }
 
@@ -191,21 +236,40 @@ void cpu_init_early_f(void)
 {
 	u32 mas0, mas1, mas2, mas3, mas7;
 
-	mas0 = MAS0_TLBSEL(1) | MAS0_ESEL(13);
-	mas1 = MAS1_VALID | MAS1_TID(0) | MAS1_TS |
-			MAS1_TSIZE(BOOKE_PAGESZ_1M);
-	mas2 = FSL_BOOKE_MAS2(CFG_CCSRBAR, MAS2_I | MAS2_G);
-	mas3 = FSL_BOOKE_MAS3(CFG_CCSRBAR_PHYS, 0, MAS3_SW | MAS3_SR);
+	/* Ramload, setup done by debugger */
+	if (CONFIG_TEXT_BASE == 0)
+		return;
+
+//	mas0 = MAS0_TLBSEL(1) | MAS0_ESEL(13);
+//	mas1 = MAS1_VALID | MAS1_TID(0) | MAS1_TS |
+//			MAS1_TSIZE(BOOKE_PAGESZ_1M);
+//	mas2 = FSL_BOOKE_MAS2(CFG_CCSRBAR, MAS2_I | MAS2_G);
+//	mas3 = FSL_BOOKE_MAS3(CFG_CCSRBAR_PHYS, 0, MAS3_SW | MAS3_SR);
+//	mas7 = FSL_BOOKE_MAS7(CFG_CCSRBAR_PHYS);
+	mas0 = MAS0_TLBSEL(0) | MAS0_ESEL(0);
+	mas1 = MAS1_VALID | MAS1_TID(0) | MAS1_TS | MAS1_TSIZE(BOOKE_PAGESZ_4K);
+	mas2 = FSL_BOOKE_MAS2(CFG_CCSRBAR, MAS2_I|MAS2_G);
+	mas3 = FSL_BOOKE_MAS3(CFG_CCSRBAR_PHYS, 0, MAS3_SW|MAS3_SR);
 	mas7 = FSL_BOOKE_MAS7(CFG_CCSRBAR_PHYS);
 
 	e500_write_tlb(mas0, mas1, mas2, mas3, mas7);
 
-	fsl_erratum_p1010_a003549();
+	/* set up CCSR if we want it moved */
+#ifndef CONFIG_ENABLE_36BIT_PHYS
+	if (CFG_CCSRBAR_DEFAULT != CFG_CCSRBAR_PHYS)
+		fsl_setup_ccsrbar();
+#endif
+	//fsl_erratum_p1010_a003549();
 	fsl_init_laws();
-	fsl_erratum_ifc_a003399();
+	//fsl_erratum_ifc_a003399();
 
 	e500_invalidate_tlb(1);
 	e500_init_tlbs();
+}
+
+void cpu_init_f(void)
+{
+	fsl_init_tb();
 }
 
 static int cpu_init_r(void)

@@ -25,11 +25,11 @@
  */
 
 #define SET_IVOR(vector_number, vector_offset)	\
-	li	r3,vector_offset@l; 		\
+	li	r3,vector_offset@l;		\
 	mtspr	SPRN_IVOR##vector_number,r3;
 
 #define SET_GIVOR(vector_number, vector_offset)	\
-	li	r3,vector_offset@l; 		\
+	li	r3,vector_offset@l;		\
 	mtspr	SPRN_GIVOR##vector_number,r3;
 
 	SET_IVOR(0, 0x020) /* Critical Input */
@@ -50,8 +50,10 @@
 	SET_IVOR(15, 0x040) /* Debug */
 
 	/* e500v1 & e500v2 only */
+#if !defined(CONFIG_E500MC)
 	SET_IVOR(32, 0x200) /* SPE Unavailable */
 	SET_IVOR(33, 0x220) /* Embedded FP Data */
 	SET_IVOR(34, 0x240) /* Embedded FP Round */
 
 	SET_IVOR(35, 0x260) /* Performance monitor */
+#endif

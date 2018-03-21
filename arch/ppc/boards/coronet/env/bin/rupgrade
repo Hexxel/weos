@@ -1,0 +1,13 @@
+#!/bin/sh
+
+input off
+
+unprotect /dev/self0
+echo erase
+erase /dev/self0
+echo program
+cp /dev/ramload.barebox /dev/self0
+
+input on
+
+echo done

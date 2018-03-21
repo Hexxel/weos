@@ -57,6 +57,7 @@ typedef struct ddr3_spd_eeprom_s generic_spd_eeprom_t;
 #define SDRAM_CFG_RD_EN			0x10000000
 #define SDRAM_CFG_SDRAM_TYPE_DDR1	0x02000000
 #define SDRAM_CFG_SDRAM_TYPE_DDR2	0x03000000
+#define SDRAM_CFG_SDRAM_TYPE_DDR3	0x07000000
 #define SDRAM_CFG_SDRAM_TYPE_MASK	0x07000000
 #define SDRAM_CFG_SDRAM_TYPE_SHIFT	24
 #define SDRAM_CFG_DYN_PWR		0x00200000
@@ -65,6 +66,8 @@ typedef struct ddr3_spd_eeprom_s generic_spd_eeprom_t;
 #define SDRAM_CFG_8_BE			0x00040000
 #define SDRAM_CFG_NCAP			0x00020000
 #define SDRAM_CFG_2T_EN			0x00008000
+#define SDRAM_CFG_BA_INTLV_0_1		0x00004000
+#define SDRAM_CFG_HSE			0x00000008
 #define SDRAM_CFG_BI			0x00000001
 
 #define SDRAM_CFG2_D_INIT		0x00000010

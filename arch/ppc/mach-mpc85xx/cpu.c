@@ -32,9 +32,11 @@
 #include <mach/mmu.h>
 #include <mach/immap_85xx.h>
 
-static void __noreturn mpc85xx_restart_soc(struct restart_handler *rst)
+void __noreturn __weak mpc85xx_restart_soc(struct restart_handler *rst)
 {
 	void __iomem *regs = (void __iomem *)MPC85xx_GUTS_ADDR;
+
+	pr_info("\n");
 
 	/* Everything after the first generation of PQ3 parts has RSTCR */
 	out_be32(regs + MPC85xx_GUTS_RSTCR_OFFSET, 0x2);  /* HRESET_REQ */
