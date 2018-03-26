@@ -118,7 +118,7 @@ static const struct devfs_partition nor_map[] = {
 	},
 	{
 		.name   = "etc",
-		.offset = -SZ_256K,
+		.offset =  SZ_32M - SZ_256K,
 		.size   =  SZ_256K,
 		.flags  = DEVFS_PARTITION_FIXED,
 	},
