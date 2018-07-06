@@ -29,6 +29,7 @@
 
 #include <crc.h>
 #include <cramfs/cramfs_fs.h>
+#include <../fs/squashfs/squashfs_fs.h>
 
 #include <generated/utsrelease.h>
 
@@ -167,7 +168,8 @@ static int __do_bootm_linux(struct image_data *data, unsigned long free_mem, int
 		initrd_start = data->initrd_res->start;
 		initrd_end = data->initrd_res->end;
 		initrd_size = resource_size(data->initrd_res);
-		free_mem = PAGE_ALIGN(initrd_end + 1);
+		if (initrd_end > free_mem)
+			free_mem = PAGE_ALIGN(initrd_end);
 	}
 
 	ret = bootm_load_devicetree(data, free_mem);
@@ -748,9 +750,55 @@ static struct binfmt_hook binfmt_cramfs_hook = {
 	.exec = "bootm",
 };
 
+static int do_bootm_squashfs(struct image_data *data)
+{
+	struct squashfs_super_block *img;
+	unsigned long imgsz;
+	int fd;
+
+	if (!data->initrd_file)
+		goto bootz;
+
+	fd = open(data->initrd_file, O_RDONLY);
+	if (fd < 0)
+		return fd;
+
+	img = memmap(fd, PROT_READ);
+	close(fd);
+	if (!img)
+		return -EIO;
+
+	if (img != (void *)data->initrd_address)
+		return -EINVAL;
+
+	imgsz = le64_to_cpu(img->bytes_used);
+	data->initrd_res = request_sdram_region("initrd",
+						data->initrd_address,
+						imgsz);
+	if (!data->initrd_res)
+		return -ENOMEM;
+
+	data->os_address = PAGE_ALIGN(data->initrd_res->end);
+
+	globalvar_add_simple("linux.bootargs.rdsize",
+			     basprintf("ramdisk_size=%lu",
+				       (imgsz + SZ_1K - 1) / SZ_1K));
+bootz:
+	__add_mtdparts();
+
+	return do_bootz_linux(data);
+}
+
+static struct image_handler squashfs_handler = {
+	.name = "Westermo SquashFS Image",
+	.bootm = do_bootm_squashfs,
+	.filetype = filetype_arm_zimage,
+};
+
 static int armlinux_register_image_handler(void)
 {
 	register_image_handler(&cramfs_handler);
+	register_image_handler(&squashfs_handler);
 
 	register_image_handler(&barebox_handler);
 	register_image_handler(&uimage_handler);
