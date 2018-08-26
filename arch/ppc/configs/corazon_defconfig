@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Barebox/ppc 2017.12.0-1-beta1 Configuration
+# Barebox/ppc 2017.12.0 Configuration
 #
 CONFIG_PPC=y
 # CONFIG_ARCH_MPC5XXX is not set
@@ -142,7 +142,7 @@ CONFIG_COMPILE_MEMORY=y
 # Information
 #
 CONFIG_CMD_DEVINFO=y
-# CONFIG_CMD_DMESG is not set
+CONFIG_CMD_DMESG=y
 CONFIG_CMD_DRVINFO=y
 CONFIG_CMD_HELP=y
 CONFIG_LONGHELP=y
