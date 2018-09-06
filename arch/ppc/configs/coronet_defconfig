@@ -236,7 +236,7 @@ CONFIG_CMD_MDIO=y
 # CONFIG_CMD_RMON is not set
 CONFIG_CMD_MVCFG=y
 CONFIG_CMD_PING=y
-# CONFIG_CMD_TFTP is not set
+CONFIG_CMD_TFTP=y
 
 #
 # Console and Framebuffer interaction
