@@ -19,6 +19,8 @@
 #include <linux/list.h>
 #include <linux/ethtool.h>
 #include <linux/mii.h>
+#include <libwestermo.h>
+
 
 #define PHY_DEFAULT_FEATURES    (SUPPORTED_Autoneg | \
 				 SUPPORTED_TP | \
@@ -158,6 +160,8 @@ struct phy_device {
 	struct device_d dev;
 
 	u32 phy_id;
+	u32 phy_isC45;
+	u32 phy_isC22overC45;
 
 	u32 dev_flags;
 
@@ -220,6 +224,8 @@ struct phy_driver {
 	u32 phy_id;
 	unsigned int phy_id_mask;
 	u32 features;
+
+	u32 phy_clause22over45;
 
 	/*
 	 * Called to initialize the PHY,
@@ -286,7 +292,17 @@ int phy_register_device_nogen(struct phy_device *dev);
  */
 static inline int phy_read(struct phy_device *phydev, u32 regnum)
 {
-	return mdiobus_read(phydev->bus, phydev->addr, regnum);
+#if 1
+	if (phydev->phy_isC22overC45) {
+		if (mdiobus_write(phydev->bus, 0x1c, 0x18, 0x9800 | (phydev->addr << 5) | regnum))
+			return -EIO;
+		return mdiobus_read(phydev->bus, 0x1c, 0x19);
+	}
+	else
+		return mdiobus_read(phydev->bus, phydev->addr, regnum);
+#else
+		return mdiobus_read(phydev->bus, phydev->addr, regnum);
+#endif
 }
 
 /**
@@ -297,7 +313,19 @@ static inline int phy_read(struct phy_device *phydev, u32 regnum)
  */
 static inline int phy_write(struct phy_device *phydev, u32 regnum, u16 val)
 {
-	return mdiobus_write(phydev->bus, phydev->addr, regnum, val);
+#if 1
+	if (phydev->phy_isC22overC45) {
+		if (mdiobus_write(phydev->bus, 0x1c, 0x19, val))
+			return -EIO;
+		if (mdiobus_write(phydev->bus, 0x1c, 0x18, 0x9400 | (phydev->addr << 5) | regnum))
+			return -EIO;
+		return 0;
+	}
+	else
+		return mdiobus_write(phydev->bus, phydev->addr, regnum, val);
+#else
+		return mdiobus_write(phydev->bus, phydev->addr, regnum, val);
+#endif
 }
 
 int phy_device_connect(struct eth_device *dev, struct mii_bus *bus, int addr,

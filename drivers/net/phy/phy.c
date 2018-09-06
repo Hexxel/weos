@@ -172,6 +172,9 @@ struct phy_device *phy_device_create(struct mii_bus *bus, int addr, int phy_id)
 	phydev->addr = addr;
 	phydev->phy_id = phy_id;
 
+	phydev->phy_isC45 = 0;
+	phydev->phy_isC22overC45 = 0;
+
 	phydev->bus = bus;
 	phydev->dev.bus = &mdio_bus_type;
 
@@ -183,6 +186,10 @@ struct phy_device *phy_device_create(struct mii_bus *bus, int addr, int phy_id)
 	} else {
 		sprintf(phydev->dev.name, "fixed-phy");
 		phydev->dev.id = DEVICE_ID_DYNAMIC;
+	}
+
+	if (product_is_coronet_tbn()) {
+		phydev->phy_isC22overC45 = 1;
 	}
 
 	return phydev;

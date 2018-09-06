@@ -58,7 +58,8 @@
 #include <asm/fsl_portals.h>
 #include <asm/fsl_liodn.h>
 
-#define GPIO_WATCHDOG  (1 << (31 - 16))
+#define GPIO_WATCHDOG(i)  (1 << (31 - i))
+#define GPIO2_OFFSET 0x1000
 
 #define WATCHDOG_INTERVAL (500 * MSECOND)
 
@@ -69,6 +70,7 @@ struct wd_gpio {
 	u64 timeout;
 
 	void __iomem *gpdat;
+	u32 iobit;
 	int next;
 };
 
@@ -81,9 +83,9 @@ static void wd_gpio_kick(struct poller_struct *poll)
 		return;
 
 	if (priv->next)
-		setbits_be32(priv->gpdat, GPIO_WATCHDOG);
+		setbits_be32(priv->gpdat, priv->iobit);
 	else
-		clrbits_be32(priv->gpdat, GPIO_WATCHDOG);
+		clrbits_be32(priv->gpdat, priv->iobit);
 
 	priv->next = !priv->next;
 	priv->timeout = now + WATCHDOG_INTERVAL;
@@ -95,10 +97,18 @@ static int wd_gpio_init(struct watchdog *wd, unsigned timeout)
 	void __iomem *gpio_base  = (void __iomem *)MPC85xx_GPIO_ADDR;
 	void __iomem *gpdir = gpio_base + MPC85xx_GPIO_GPDIR;
 
-	priv->gpdat = gpio_base +  MPC85xx_GPIO_GPDAT;
+	if (product_is_coronet_tbn()) {
+	  priv->iobit = GPIO_WATCHDOG(8);
+	  gpdir = gpio_base + MPC85xx_GPIO_GPDIR + GPIO2_OFFSET;
+	  priv->gpdat = gpio_base + MPC85xx_GPIO_GPDAT + GPIO2_OFFSET;
+	}
+	else {
+	  priv->iobit = GPIO_WATCHDOG(16);
+	  priv->gpdat = gpio_base + MPC85xx_GPIO_GPDAT;
+	}
 
-	setbits_be32(gpdir,       GPIO_WATCHDOG);
-	clrbits_be32(priv->gpdat, GPIO_WATCHDOG);
+	setbits_be32(gpdir,       priv->iobit);
+	clrbits_be32(priv->gpdat, priv->iobit);
 	priv->next = 1;
 
 	priv->timeout = get_time_ns() + WATCHDOG_INTERVAL;
@@ -175,6 +185,26 @@ static struct i2c_board_info i2c2_bus[] = {
 
 struct i2c_platform_data i2cplat = {
 	.bitrate = 100000,
+};
+
+static struct mv88e6xxx_pdata no_backplane[] = {
+	[0] = {
+		.smi_addr = SC0_SMI_ADDR,
+
+		.cpu_speed        = 1000,
+
+		.cpu_port         = 0,
+		.cascade_ports[0] = -1,
+		.cascade_ports[1] = -1,
+		.cascade_rgmii[0] = -1,
+		.cascade_rgmii[1] = -1
+	},
+
+	[1] = {
+		.cpu_speed        = 0,
+	},
+
+	[2] = { .cpu_speed = 0 }
 };
 
 static struct mv88e6xxx_pdata backplane_cascade[] = {
@@ -319,12 +349,16 @@ static int devices_init(void)
 	add_generic_device("memac-mdio", 0, NULL, 0xfe4fc030,
 			   0x10, IORESOURCE_MEM, &memac_mdio_pdata);
 
-   set_product_id_from_idmem();
+	set_product_id_from_idmem();
 
-   if (product_is_coronet_star())
-	   wmo_backplane_setup(backplane_star);
-   else
-	   wmo_backplane_setup(backplane_cascade);
+	if (product_is_coronet_star())
+		wmo_backplane_setup(backplane_star);
+	else {
+		if (product_is_coronet_cascade())
+			wmo_backplane_setup(backplane_cascade);
+		else
+			wmo_backplane_setup(no_backplane);
+	}
 
 	fm_info[0].phy_addr = 4;
 	fm_info[0].enet_if = PHY_INTERFACE_MODE_RGMII;
