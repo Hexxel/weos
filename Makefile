@@ -872,8 +872,8 @@ export CPPFLAGS_barebox.lds += -C -U$(ARCH)
 
 define symlink-config-h
 	if [ -f $(srctree)/$(BOARD)/config.h ]; then		\
-		$(kecho) '  SYMLINK $@ -> $(BOARD)/config.h';	\
-		ln -fsn $(srctree)/$(BOARD)/config.h $@;	\
+		$(kecho) '  SYMLINK $@ -> $(BOARD)config.h';	\
+		ln -fsn $(srctree)/$(BOARD)config.h $@;		\
 	else							\
 		[ -h $@ ] && rm -f $@;				\
 		$(kecho) '  CREATE  $@';			\

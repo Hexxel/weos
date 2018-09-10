@@ -18,15 +18,16 @@
  * the ones in that file if any changes are to be made.
  */
 #define CORONET_VIPER_212_MIN 0x4000
-#define CORONET_VIPER_212_MAX 0x47FF
+#define CORONET_VIPER_212_MAX 0x401B
 #define CORONET_VIPER_220_MIN 0x4800
 #define CORONET_VIPER_220_MAX 0x4BFF
-#define CORONET_VIPER_TBN_MIN 0x4C00
+#define CORONET_VIPER_TBN_MIN 0x401C
 #define CORONET_VIPER_TBN_MAX 0x4FFF
+
 
 static char idmem[128];
 
-#if defined(CONFIG_CORAZON) || defined(CONFIG_CORONET)
+#if defined(CONFIG_CORAZON) || defined(CONFIG_CORONET) || defined(CONFIG_MACH_DAGGER)
 
 #define PRODUCT_FMT "%.4x"
 
@@ -133,15 +134,15 @@ int product_is_coronet_star(void)
 
 int product_is_coronet_cascade(void)
 {
-   int return_value = false;
-   u32 product = get_product_id();
+  int return_value = false;
+  u32 product = get_product_id();
 
-   if ((product >= CORONET_VIPER_212_MIN) && (product <= CORONET_VIPER_212_MAX))
-   {
+  if ((product >= CORONET_VIPER_212_MIN) && (product <= CORONET_VIPER_212_MAX))
+    {
       return_value = true;
-   }
+    }
 
-   return return_value;
+  return return_value;
 }
 
 int product_is_coronet_tbn(void)
@@ -149,7 +150,7 @@ int product_is_coronet_tbn(void)
    int return_value = false;
    u32 product = get_product_id();
 
-   if ((product >= CORONET_VIPER_TBN_MIN) && (product <= CORONET_VIPER_TBN_MAX))
+	if ((product >= CORONET_VIPER_TBN_MIN) && (product <= CORONET_VIPER_TBN_MAX))
    {
       return_value = true;
    }

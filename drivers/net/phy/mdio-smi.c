@@ -286,3 +286,101 @@ static struct driver_d smi_phy_indirect_bus_driver = {
 	.probe = smi_phy_indirect_bus_probe,
 };
 register_driver_macro(coredevice, platform, smi_phy_indirect_bus_driver);
+
+/*Note addr = port(9:5) | dev(4:0) */
+int smi_phy_indirect_c45_read(struct mii_bus *bus, int addr, int reg)
+{
+	struct smi_bus *smi_phy = bus->priv;
+	int ret = -EIO;
+
+	if (smi_phy_wait_ready(smi_phy->mii))
+		goto out;
+
+	if (smi_write(smi_phy->mii, SMI_G2,
+		      SMI_G2_PD, reg))
+		goto out;
+
+	if (smi_write(smi_phy->mii, SMI_G2,
+		      SMI_G2_PC, 0x8000 | addr))
+	        goto out;
+
+	if (smi_phy_wait_ready(smi_phy->mii))
+		goto out;
+
+	if (smi_write(smi_phy->mii, SMI_G2,
+		      SMI_G2_PC, 0x8c00 | addr))
+	        goto out;
+
+	if (smi_phy_wait_ready(smi_phy->mii))
+		goto out;
+
+	ret = smi_read(smi_phy->mii, SMI_G2, SMI_G2_PD);
+out:
+	return ret;
+}
+
+/*Note addr = port(9:5) | dev(4:0) */
+int smi_phy_indirect_c45_write(struct mii_bus *bus, int addr, int reg, uint16_t val)
+{
+	struct smi_bus *smi_phy = bus->priv;
+	int ret = -EIO;
+
+	if (smi_phy_wait_ready(smi_phy->mii))
+		goto out;
+
+	if (smi_write(smi_phy->mii, SMI_G2,
+		      SMI_G2_PD, reg))
+		goto out;
+
+	if (smi_write(smi_phy->mii, SMI_G2,
+		      SMI_G2_PC, 0x8000 | addr))
+	        goto out;
+
+	if (smi_phy_wait_ready(smi_phy->mii))
+		goto out;
+
+	if (smi_write(smi_phy->mii, SMI_G2, SMI_G2_PD, val))
+		goto out;
+
+	if (smi_write(smi_phy->mii, SMI_G2,
+		      SMI_G2_PC, 0x8400 | addr))
+		goto out;
+
+	if (smi_phy_wait_ready(smi_phy->mii))
+		goto out;
+
+	ret = 0;
+out:
+	return ret;
+}
+
+static int smi_phy_indirect_c45_bus_probe(struct device_d *dev)
+{
+	struct smi_bus_pdata *pdata = dev->platform_data;
+	struct smi_bus *smi_phy;
+	int ret;
+
+	smi_phy = xzalloc(sizeof(*smi_phy));
+
+	smi_phy->mii  = pdata->bus;
+
+	smi_phy->bus.read   = smi_phy_indirect_c45_read;
+	smi_phy->bus.write  = smi_phy_indirect_c45_write;
+	smi_phy->bus.reset  = smi_reset;
+	smi_phy->bus.priv   = smi_phy;
+	smi_phy->bus.parent = dev;
+	dev->priv = smi_phy;
+
+	ret = mdiobus_register(&smi_phy->bus);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
+static struct driver_d smi_phy_indirect_c45_bus_driver = {
+	.name  = "mdio-smi-indirect_c45",
+	.probe = smi_phy_indirect_c45_bus_probe,
+};
+register_driver_macro(coredevice, platform, smi_phy_indirect_c45_bus_driver);
+

@@ -16,5 +16,6 @@ u8 get_raw_value_from_idmem(int pos);
 
 int product_is_coronet_star(void);
 int product_is_coronet_cascade(void);
+int product_is_coronet_tbn(void);
 
 #endif	/* __LIBWESTERMO_H */
