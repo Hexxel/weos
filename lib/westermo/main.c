@@ -43,7 +43,7 @@ static u32 wmo_product(void)
 
 #elif defined(CONFIG_CORONET)
 
-#define BACKPLANE "fman"
+#define BACKPLANE "fman@400000"
 
 #else
 
