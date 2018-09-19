@@ -41,6 +41,10 @@ static u32 wmo_product(void)
 
 #define BACKPLANE "mac-annex"
 
+#elif defined(CONFIG_CORONET)
+
+#define BACKPLANE "fman"
+
 #else
 
 #define BACKPLANE "backplane"
