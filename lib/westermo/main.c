@@ -37,20 +37,6 @@ static u32 wmo_product(void)
 #endif
 
 
-#if defined(CONFIG_MACH_DAGGER)
-
-#define BACKPLANE "mac-annex"
-
-#elif defined(CONFIG_CORONET)
-
-#define BACKPLANE "fman@400000"
-
-#else
-
-#define BACKPLANE "backplane"
-
-#endif
-
 static void set_product(int product)
 {
 	char str[10];
@@ -111,11 +97,11 @@ static int wmo_of_fixup(struct device_node *root, void *arg)
 		}
 	}
 
-	if (!of_find_node_by_name(root, BACKPLANE)) {
-		pr_info("no backplane information, assuming legacy image\n");
+	if (of_find_node_by_name(root, "mac-annex")) {
+		pr_info("Dagger image, no MAC address fixup\n");
 		goto out;
 	}
-	
+
 	np = of_find_node_by_type(root, "network");
 	while (np) {
 		if (!of_device_is_available(np))
