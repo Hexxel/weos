@@ -27,7 +27,7 @@
 
 static char idmem[128];
 
-#if defined(CONFIG_CORAZON) || defined(CONFIG_CORONET)
+#if defined(CONFIG_CORAZON) || defined(CONFIG_CORONET) || defined(CONFIG_MACH_DAGGER)
 
 #define PRODUCT_FMT "%.4x"
 
