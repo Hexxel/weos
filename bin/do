@@ -1,0 +1,151 @@
+#!/bin/bash
+# Run command in Docker
+# ./bin/do -c CMD ARGS
+#
+# The command will be run as the same user as you are logged in as,
+# the same UID and GID.
+# Directories exported into the docker:
+# $TFTPDIR: If a local directory (not a SSH path)
+# $DOWNLOADS: The path for downloads in WeOS
+# $PWD: The current tree to build
+# $EXTRA_VOLUMES: Additional directories to be mounted in docker, e.g. libteam-dev
+
+set -e
+
+# Build log, duplicated in top Makefile
+LOG=build.log
+DO=`which docker`
+IMG=dockerregistry.westermo.com:443/weos-toolchain:2.0
+ENV=`tempfile`
+TOOLCHAIN_PATH=/usr/local/arm-unknown-linux-gnueabi-5.3-1/bin/:/usr/local/powerpc-unknown-linux-gnu-5.3-1/bin/:/usr/local/x86_64-unknown-linux-gnu-5.3-1/bin/
+SU_USER="groupadd -o -g `id -g` bob ; useradd -g  `id -g` --uid  `id -u` bob ;sudo PATH=\$PATH:$TOOLCHAIN_PATH -E --user=bob  "
+CMD=./bin/build.sh
+
+# Variables exported to the docker environment, if set.
+# Please sort alphabetically.
+EXPORTS+=" ARCH"
+EXPORTS+=" BUILD_LEGAL"
+EXPORTS+=" BUILD_URL"
+EXPORTS+=" CCACHE_DIR"
+EXPORTS+=" CROSS_COMPILE"
+EXPORTS+=" DO_NOT_USE_CCACHE"
+EXPORTS+=" DOWNLOADS"
+EXPORTS+=" GTAGS_MACH"
+EXPORTS+=" HOME"
+EXPORTS+=" RELEASE"
+EXPORTS+=" TFTPDIR"
+EXPORTS+=" V"
+EXPORTS+=" VERIFY_BB"
+
+if [ -f ${PWD}/../.wemeld ]; then
+    WEMELD_ROOT=$(readlink -f ${PWD}/../)
+    EXPORTS+=" WEMELD_ROOT"
+fi
+
+xdg() {
+    DIR=`xdg-user-dir $1  2>/dev/null`
+    [ "x$DIR" != "x" -a "$DIR" != "$HOME" ] && echo "$2=$DIR" || true
+}
+
+find_key_value()
+{
+        grep -e "^$1 " $2 | sed "s/^$1\s*=\s*\(.*\)$/\1/" | sed "s/^\([\"']\)\(.*\)\1\$/\2/g"
+}
+
+# Silent if no arguments to script was given
+log()
+{
+        if [ ! -f config.arch -o -n "$TARGET" ]; then
+                echo "$@"
+        fi
+}
+
+if [ $# -gt 0 ]; then
+        if [[ $1 = -c ]]; then
+                shift;
+                CMD=$1;
+                shift;
+        elif [[ $1 = -h ]]; then
+                     echo "Usage ./bin/do [-c CMD] [ARGS...]"
+                     echo "-c: Command to run inside the docker container (default ./bin/build.sh)"
+                     exit 0;
+        fi
+
+        if [[ $1 =~ .*/.* ]]; then
+                TARGET=$1
+        fi
+fi
+
+if [ "x${DOWNLOADS}" = "x" ]; then
+        xdg DOWNLOAD DOWNLOADS
+fi
+if [ "x${DOWNLOADS}" = "x" ] || [ "x${DOWNLOADS}" = "x${HOME}" ] ; then
+        DOWNLOADS=${PWD}/../Downloads
+fi
+
+for var in ${EXPORTS}; do
+    if [ "x${!var}" != "x" ]; then
+        echo "${var}=${!var}" >> $ENV
+    fi
+done
+
+xdg-user-dir DOCUMENTS PERSISTENT_STORE   >> $ENV
+
+# Find ccache directory
+REQ_VER=`find_key_value TOOLCHAIN_VERSION core.mk`
+
+# Fallback to check old locations.
+if [ -z "$REQ_VER" ]; then
+        REQ_VER=`find_key_value REQ_TOOL_VER core.mk`
+        if [ -z "$REQ_VER" ]; then
+                REQ_VER=`find_key_value REQ_TOOL_VER utils/Makefile`
+        fi
+fi
+VERSION=`echo $REQ_VER | sed 's/\s//g'`
+
+VOLUMES="  -v /etc/localtime:/etc/localtime:ro "
+mkdir -p ${HOME}/.ccaches/
+if [ -z ${DO_NOT_USE_CCACHE} ]; then
+        VOLUMES=" ${VOLUMES} -v ${HOME}/.ccaches/:${HOME}/.ccaches/"
+        VOLUMES=" ${VOLUMES} -v ${HOME}/.ccache/:${HOME}/.ccache/"
+fi
+VOLUMES=" ${VOLUMES} -v ${DOWNLOADS}:${DOWNLOADS}"
+VOLUMES=" ${VOLUMES} -v ${PWD}:${PWD} "
+VOLUMES=" ${VOLUMES} -v ${HOME}/.ssh:${HOME}/.ssh "
+if [ "x${EXTRA_VOLUMES}" != "x" ]; then
+	for v in ${EXTRA_VOLUMES}; do
+		VOLUMES=" $VOLUMES -v $v:$v "
+	done
+fi
+
+if [ "x${TFTPDIR}" != "x" ] && [ -d ${TFTPDIR} ]; then
+        VOLUMES="${VOLUMES} -v ${TFTPDIR}:${TFTPDIR} "
+fi
+
+if [ "x${WEMELD_ROOT}" != "x" ]; then
+        VOLUMES="${VOLUMES} -v ${WEMELD_ROOT}:${WEMELD_ROOT} "
+fi
+
+
+DOCKEROPT=" --rm -i ${VOLUMES}  ${LOOPS} ${DMS} --security-opt apparmor:unconfined --cap-add SYS_ADMIN --cap-add mknod --dns=192.168.130.100 --dns=8.8.8.8 -h buildmachine --env-file=$ENV -w $PWD "
+
+# Check if STDIN is a tty, if so add -t and allow to use CTRL-C
+# Without this check, Jenkins will break.
+if [ -t 0 ]; then
+        DOCKEROPT=" ${DOCKEROPT} -t"
+fi
+
+DOCKEROPT=" ${DOCKEROPT} ${IMG}"
+
+if [ "x$DO" = "x" ]; then
+    echo "Please install docker.io first."
+    exit 1
+fi
+CMD=" ${SU_USER} ${CMD} $@"
+
+if [ ! -d ${DOWNLOADS} ]; then
+        mkdir ${DOWNLOADS};
+fi
+$DO run ${DOCKEROPT}  bash -c "${CMD}";
+rm $ENV
+exit 0
