@@ -468,10 +468,10 @@ static int mv88e6xxx_probe(struct phy_device *phydev)
 	}
 
 	smi_phy_data.bus = sc->smi;
-	sc->smi_phy->phy_mask = sc->model->phy_mask;
 	sc->smi_phy = __add_smi_bus(sc->model->smi_mode, sc->phy->addr, &smi_phy_data);
 	if (!sc->smi_phy)
 		return -ENODEV;
+	sc->smi_phy->phy_mask = sc->model->phy_mask;
 
 	if (product_is_coronet_tbn()) {
 /*		sc->smi_phy_c45 = __add_smi_bus("mdio-smi-indirect_c45",
