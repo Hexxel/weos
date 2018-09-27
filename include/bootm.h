@@ -120,6 +120,10 @@ int bootm_get_os_size(struct image_data *data);
 
 enum bootm_verify bootm_get_verify_mode(void);
 
+int do_bootz_linux(struct image_data *data);
+
+void bootm_add_mtdparts(void);
+
 #define UIMAGE_SOME_ADDRESS (UIMAGE_INVALID_ADDRESS - 1)
 
 #endif /* __BOOTM_H */

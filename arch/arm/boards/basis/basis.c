@@ -26,6 +26,7 @@
 
 #include <asm/armlinux.h>
 #include <bootsource.h>
+#include <bootm.h>
 #include <common.h>
 #include <gpio.h>
 #include <init.h>
@@ -43,10 +44,13 @@
 #include <generated/mach-types.h>
 #include <mfd/mc13xxx.h>
 #include <mach/bbu.h>
+#include <fcntl.h>
+#include <fs.h>
+#include <globalvar.h>
 #include <libwestermo.h>
+#include <squashfs_fs.h>
 
 #include "pll.h"
-
 
 static struct fec_platform_data fec_info = {
 	.xcv_type = PHY_INTERFACE_MODE_MII,
@@ -150,6 +154,51 @@ static struct mv88e6xxx_pdata backplane[] = {
 };
 
 
+static int do_bootm_squashfs(struct image_data *data)
+{
+	struct squashfs_super_block *img;
+	unsigned long imgsz;
+	int fd;
+
+	if (!data->initrd_file)
+		goto bootz;
+
+	fd = open(data->initrd_file, O_RDONLY);
+	if (fd < 0)
+		return fd;
+
+	img = memmap(fd, PROT_READ);
+	close(fd);
+	if (!img)
+		return -EIO;
+
+	if (img != (void *)data->initrd_address)
+		return -EINVAL;
+
+	imgsz = le64_to_cpu(img->bytes_used);
+	data->initrd_res = request_sdram_region("initrd",
+						data->initrd_address,
+						imgsz);
+	if (!data->initrd_res)
+		return -ENOMEM;
+
+	data->os_address = PAGE_ALIGN(data->initrd_res->end);
+
+	globalvar_add_simple("linux.bootargs.rdsize",
+			     basprintf("ramdisk_size=%lu",
+				       (imgsz + SZ_1K - 1) / SZ_1K));
+bootz:
+	bootm_add_mtdparts();
+
+	return do_bootz_linux(data);
+}
+
+static struct image_handler squashfs_handler = {
+	.name = "Westermo SquashFS Image",
+	.bootm = do_bootm_squashfs,
+	.filetype = filetype_arm_zimage,
+};
+
 static int basis_devices_init(void)
 {
 	int i;
@@ -228,6 +277,7 @@ static int basis_devices_init(void)
 	imx27_add_fec(&fec_info);
 	wmo_backplane_setup(backplane);
 
+        register_image_handler(&squashfs_handler);
 	return 0;
 }
 
