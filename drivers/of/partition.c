@@ -137,7 +137,7 @@ static int of_partition_fixup(struct device_node *root, void *ctx)
 		return 0;
 
 	if (!cdev->device_node)
-		return -EINVAL;
+		return 0; // This is not an error if we don't use a dt
 
 	list_for_each_entry(partcdev, &cdev->partitions, partition_entry) {
 		if (partcdev->flags & DEVFS_PARTITION_FROM_TABLE)

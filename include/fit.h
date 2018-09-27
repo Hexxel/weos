@@ -10,6 +10,7 @@
 #define __FIT_H
 
 #include <boot.h>
+#include <bootm.h>
 
 #ifndef CONFIG_FIT_IMAGE
 static inline int fit_looks_ok(const void *fit)
