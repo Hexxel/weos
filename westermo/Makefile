@@ -1,4 +1,4 @@
-BOOT-VERSION := 1.0.1
+BOOT-VERSION := 1.0.2
 
 # Called from barebox.bin build target?
 ifeq ($(CONFIG_MACH_DAGGER),y)
@@ -65,7 +65,7 @@ boot.bin: boot.o
 	$(OBJCOPY) -O binary $< $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -march=armv7-a -c -o $@ $<
+	$(CC) $(CFLAGS) -I ../include -march=armv7-a -c -o $@ $<
 
 %.o: %.S
 	$(CC) $(CFLAGS) -I .. -march=armv7-a -c -o $@ $<

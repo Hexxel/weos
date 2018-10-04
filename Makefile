@@ -1,7 +1,7 @@
 VERSION = 2017
 PATCHLEVEL = 12
 SUBLEVEL = 0
-EXTRAVERSION = -2-rc1
+EXTRAVERSION = -3-beta1
 NAME = None
 
 # These are targets that are NOT run in the docker environment but
