@@ -5,6 +5,8 @@ ifeq ($(CONFIG_MACH_DAGGER),y)
 lwl-y += boot-core.o
 lwl-y += boot-start.o
 else
+UTS_RELEASE = $(shell git describe --always 2> /dev/null)
+
 .PHONY: all clean test
 
 # Address at which the pbl is linked. It is relocatable anyway, but
@@ -59,6 +61,7 @@ dagger-pbl-uart0.bin: $(hdr-deps)
 
 boot-version.h: Makefile
 	(echo \#define BOOT_VERSION \"$(BOOT-VERSION)\" > boot-version.h);
+	(echo \#define UTS_RELEASE "$(UTS_RELEASE)\" > utsrelease.h);
 
 # boot.bin - copies 2nd stage from spi flash to ram
 boot.bin: boot.o

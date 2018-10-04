@@ -1,4 +1,4 @@
-#include <generated/utsrelease.h>
+#include "utsrelease.h"
 #include "boot-version.h"
 #include "drg-spi.h"
 
