@@ -1,5 +1,4 @@
 #include "utsrelease.h"
-#include "boot-version.h"
 #include "drg-spi.h"
 
 #define UART_BASE 0xd0012000

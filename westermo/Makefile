@@ -1,5 +1,3 @@
-BOOT-VERSION := 1.0.2
-
 # Called from barebox.bin build target?
 ifeq ($(CONFIG_MACH_DAGGER),y)
 lwl-y += boot-core.o
@@ -35,10 +33,10 @@ ASFLAGS  := $(CFLAGS)
 hdr-deps := MVHeaderfile MVHeaderfile.uart0 $(shell ./mkhdr.py -D)
 pbl-imgs := dagger-pbl-spi.bin
 
-all: boot-version.h $(pbl-imgs) boot.bin
+all: uts-release.h $(pbl-imgs) boot.bin
 
 clean:
-	rm -f *.bin *.o
+	rm -f *.bin *.o uts-release.h
 
 test: $(TESTIMAGE)
 	@echo resetting system
@@ -59,9 +57,8 @@ dagger-pbl-uart0.bin: $(hdr-deps)
 	./mkhdr.py -f MVHeaderfile.uart0 -B uart0 -o $@
 	$(Q)cp -f $@ ..
 
-boot-version.h: Makefile
-	(echo \#define BOOT_VERSION \"$(BOOT-VERSION)\" > boot-version.h);
-	(echo \#define UTS_RELEASE "$(UTS_RELEASE)\" > utsrelease.h);
+uts-release.h:
+	(echo \#define UTS_RELEASE \"$(UTS_RELEASE)\" > utsrelease.h);
 
 # boot.bin - copies 2nd stage from spi flash to ram
 boot.bin: boot.o
