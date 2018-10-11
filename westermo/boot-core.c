@@ -104,7 +104,7 @@ void bootloader_copy(void *dst, void *src, u32 len)
 }
 
 extern int strlen(const char *s);
-static char *bb_banner = "\r\n\e[1mDagger PBL " UTS_RELEASE "\e[0m ";
+static char *bb_banner = "\r\nDagger PBL " UTS_RELEASE "\e[1m ";
 
 int pbl_main(int argc, char **_argv)
 {
@@ -121,9 +121,9 @@ int pbl_main(int argc, char **_argv)
 	sz = strlen(bb_banner);
 	puts(bb_banner);
 
-	for (i = 0; i < (77 - sz); i++)
+	for (i = 0; i < (73 - sz); i++)
 		puts("=");
-	puts("\r\n");
+	puts("\e[0m\r\n");
 
 	puts("Validating arguments ....................................... ");
 

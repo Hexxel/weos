@@ -3,7 +3,7 @@ ifeq ($(CONFIG_MACH_DAGGER),y)
 lwl-y += boot-core.o
 lwl-y += boot-start.o
 else
-UTS_RELEASE = $(shell git describe --always 2> /dev/null)
+UTS_RELEASE = $(shell git describe --dirty --always 2> /dev/null)
 
 .PHONY: all clean test
 
