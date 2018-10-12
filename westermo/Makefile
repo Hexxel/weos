@@ -36,7 +36,7 @@ pbl-imgs := dagger-pbl-spi.bin
 all: uts-release.h $(pbl-imgs) boot.bin
 
 clean:
-	rm -f *.bin *.o uts-release.h
+	rm -f *.bin *.o utsrelease.h
 
 test: $(TESTIMAGE)
 	@echo resetting system
