@@ -137,6 +137,14 @@ static void mv88e6390x_errata(struct mv88e6xxx *sc)
 	for (phy = 1; phy <= 8; phy ++)
 		mdiobus_write(sc->smi_phy, phy, 0x0, 0x9140);
 
+	/* VOD Adjustments for 10/100/1000 MB */
+	for (phy = 1; phy <= 8; phy ++) {
+		mdiobus_write(sc->smi_phy, phy, 0x16, 0x00fc);
+		mdiobus_write(sc->smi_phy, phy, 0x11, 0xcc99);
+		mdiobus_write(sc->smi_phy, phy, 0x12, 0xcccc);
+		mdiobus_write(sc->smi_phy, phy, 0x16, 0x0000);
+	}
+
 	/* Power down PHY's if in CPU_Attached mode */
 	if (cpu)
 		for (phy = 0x1; phy <= 0x8; phy ++)
