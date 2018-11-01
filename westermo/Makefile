@@ -1,10 +1,10 @@
-BOOT-VERSION := 1.0.1
-
 # Called from barebox.bin build target?
 ifeq ($(CONFIG_MACH_DAGGER),y)
 lwl-y += boot-core.o
 lwl-y += boot-start.o
 else
+UTS_RELEASE = $(shell git describe --dirty --always 2> /dev/null)
+
 .PHONY: all clean test
 
 # Address at which the pbl is linked. It is relocatable anyway, but
@@ -33,10 +33,10 @@ ASFLAGS  := $(CFLAGS)
 hdr-deps := MVHeaderfile MVHeaderfile.uart0 $(shell ./mkhdr.py -D)
 pbl-imgs := dagger-pbl-spi.bin
 
-all: boot-version.h $(pbl-imgs) boot.bin
+all: uts-release.h $(pbl-imgs) boot.bin
 
 clean:
-	rm -f *.bin *.o
+	rm -f *.bin *.o utsrelease.h
 
 test: $(TESTIMAGE)
 	@echo resetting system
@@ -57,15 +57,15 @@ dagger-pbl-uart0.bin: $(hdr-deps)
 	./mkhdr.py -f MVHeaderfile.uart0 -B uart0 -o $@
 	$(Q)cp -f $@ ..
 
-boot-version.h: Makefile
-	(echo \#define BOOT_VERSION \"$(BOOT-VERSION)\" > boot-version.h);
+uts-release.h:
+	(echo \#define UTS_RELEASE \"$(UTS_RELEASE)\" > utsrelease.h);
 
 # boot.bin - copies 2nd stage from spi flash to ram
 boot.bin: boot.o
 	$(OBJCOPY) -O binary $< $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -march=armv7-a -c -o $@ $<
+	$(CC) $(CFLAGS) -I ../include -march=armv7-a -c -o $@ $<
 
 %.o: %.S
 	$(CC) $(CFLAGS) -I .. -march=armv7-a -c -o $@ $<

@@ -29,7 +29,6 @@
 
 #include <crc.h>
 #include <cramfs/cramfs_fs.h>
-#include <../fs/squashfs/squashfs_fs.h>
 
 #include <generated/utsrelease.h>
 
@@ -320,7 +319,7 @@ err_free:
 	return ret;
 }
 
-static int do_bootz_linux(struct image_data *data)
+int do_bootz_linux(struct image_data *data)
 {
 	int fd, ret, swap = 0;
 	struct zimage_header __header, *header;
@@ -652,7 +651,7 @@ static void __add_mtdparts_one(char *mtdparts, const char *flash)
 	globfree(&g);
 }
 
-static void __add_mtdparts(void)
+void bootm_add_mtdparts(void)
 {
 	char *mtdparts = xzalloc(1024);
 	struct dirent *flash;
@@ -697,7 +696,7 @@ static int do_bootm_cramfs(struct image_data *data)
 	if (!img)
 		return -EIO;
 
-	if (img == -1)
+	if ((int)img == -1)
 		return -EIO;
 
 	crc   = CRAMFS_32(img->fsid.crc);
@@ -730,7 +729,7 @@ static int do_bootm_cramfs(struct image_data *data)
 	if (__cramfs_crc(img))
 		return -EINVAL;
 
-	__add_mtdparts();
+	bootm_add_mtdparts();
 
 	globalvar_add_simple("linux.bootargs.redboot_rel",
 			     basprintf("redboot_rel=%s", UTS_RELEASE));
@@ -745,64 +744,22 @@ static struct image_handler cramfs_handler = {
 	.filetype = filetype_cramfs,
 };
 
+#if 0
 static struct binfmt_hook binfmt_cramfs_hook = {
 	.type = filetype_cramfs,
 	.exec = "bootm",
 };
-
-static int do_bootm_squashfs(struct image_data *data)
-{
-	struct squashfs_super_block *img;
-	unsigned long imgsz;
-	int fd;
-
-	if (!data->initrd_file)
-		goto bootz;
-
-	fd = open(data->initrd_file, O_RDONLY);
-	if (fd < 0)
-		return fd;
-
-	img = memmap(fd, PROT_READ);
-	close(fd);
-	if (!img)
-		return -EIO;
-
-	if (img != (void *)data->initrd_address)
-		return -EINVAL;
-
-	imgsz = le64_to_cpu(img->bytes_used);
-	data->initrd_res = request_sdram_region("initrd",
-						data->initrd_address,
-						imgsz);
-	if (!data->initrd_res)
-		return -ENOMEM;
-
-	data->os_address = PAGE_ALIGN(data->initrd_res->end);
-
-	globalvar_add_simple("linux.bootargs.rdsize",
-			     basprintf("ramdisk_size=%lu",
-				       (imgsz + SZ_1K - 1) / SZ_1K));
-bootz:
-	__add_mtdparts();
-
-	return do_bootz_linux(data);
-}
-
-static struct image_handler squashfs_handler = {
-	.name = "Westermo SquashFS Image",
-	.bootm = do_bootm_squashfs,
-	.filetype = filetype_arm_zimage,
-};
+#endif
 
 static int armlinux_register_image_handler(void)
 {
 	register_image_handler(&cramfs_handler);
-	register_image_handler(&squashfs_handler);
-
 	register_image_handler(&barebox_handler);
 	register_image_handler(&uimage_handler);
 	register_image_handler(&rawimage_handler);
+
+        /* Register the squashfs_handler for the Basis in local file in
+           arch/arm/boards/basis/basis.c */
 	register_image_handler(&zimage_handler);
 	if (IS_BUILTIN(CONFIG_BOOTM_AIMAGE)) {
 		register_image_handler(&aimage_handler);

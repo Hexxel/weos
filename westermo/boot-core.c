@@ -1,4 +1,4 @@
-#include "boot-version.h"
+#include "utsrelease.h"
 #include "drg-spi.h"
 
 #define UART_BASE 0xd0012000
@@ -103,6 +103,9 @@ void bootloader_copy(void *dst, void *src, u32 len)
 	memcpy32((u32 *)offs, (u32 *)mem->rxdata, sizeof(mem->rxdata));
 }
 
+extern int strlen(const char *s);
+static char *bb_banner = "\r\nDagger PBL " UTS_RELEASE "\e[1m ";
+
 int pbl_main(int argc, char **_argv)
 {
 	/* argv is in fact a list of u32's, but gcc complains if the
@@ -113,9 +116,15 @@ int pbl_main(int argc, char **_argv)
 	void *src;
 	u32 len, flags;
 	int err;
+	int i, sz;
 
-	puts("\r\n\e[1mDagger PBL " BOOT_VERSION "\e[0m "
-	     "=================================================\r\n");
+	sz = strlen(bb_banner);
+	puts(bb_banner);
+
+	for (i = 0; i < (73 - sz); i++)
+		puts("=");
+	puts("\e[0m\r\n");
+
 	puts("Validating arguments ....................................... ");
 
 	if (argc < 4) {

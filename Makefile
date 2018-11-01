@@ -1,8 +1,43 @@
 VERSION = 2017
 PATCHLEVEL = 12
 SUBLEVEL = 0
-EXTRAVERSION = -2-rc1
+EXTRAVERSION = -3-beta1
 NAME = None
+
+# These are targets that are NOT run in the docker environment but
+# rather on the host system. Single targets or patterns are accepted.
+host-targets := test
+
+# By default, run all commands in the docker environment
+run-docker:=1
+
+# ...unless we're already doing that,
+ifneq (,$(wildcard /.dockerenv))
+        run-docker:=
+endif
+
+# ..or if this specific target is in `host-targets`.
+ifneq (,$(filter $(host-targets),$(MAKECMDGOALS)))
+_space :=
+_space +=
+_space +=
+$(info $(_space)HOSTCMD $(MAKECMDGOALS))
+        run-docker:=
+endif
+
+ifdef run-docker
+all:
+	@echo "  DOCKER  $@"
+	@./bin/do -c make V=$V
+legal:
+	@echo "  DOCKER  $@"
+	@./bin/do -c make V=$V $@
+
+.DEFAULT:
+	@echo "  DOCKER  $@"
+	@./bin/do -c make V=$V $@
+else
+
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
@@ -1221,3 +1256,4 @@ Makefile: ;
 # Declare the contents of the .PHONY variable as phony.  We keep that
 # information in a variable so we can use it in if_changed and friends.
 .PHONY: $(PHONY)
+endif

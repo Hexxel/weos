@@ -5,9 +5,9 @@
 #
 #   ./bin/release.sh 2016.05.0-1
 #
-BASIS_TOOL=arm-mxc-linux-gnueabi-
-CORAZON_TOOL=powerpc-e500v2-linux-gnu-
-CORONET_TOOL=powerpc-e500v2-linux-gnu-
+BASIS_TOOL=arm-unknown-linux-gnueabi-
+CORAZON_TOOL=powerpc-unknown-linux-gnu-
+CORONET_TOOL=powerpc-unknown-linux-gnu-
 DAGGER_TOOL=arm-unknown-linux-gnueabi-
 
 if [ $# != 1 ]; then
@@ -24,10 +24,6 @@ set -e
 
 
 unset LD_LIBRARY_PATH
-DAGGER_TOOL="arm-unknown-linux-gnueabi-"
-TOOLCHAINS=${DAGGER_TOOL}
-
-export PATH=$PATH:/usr/local/arm-unknown-linux-gnueabi-5.3-1/bin:/usr/local/westermo/arm-mxc-linux-gnueabi-4.7.3-6/bin/:/usr/local/westermo/powerpc-e500v2-linux-gnu-4.7.3-6/bin/
 
 echo "Building Basis with ${BASIS_TOOL}"
 make ARCH=arm CROSS_COMPILE=${BASIS_TOOL} distclean
