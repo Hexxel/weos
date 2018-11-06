@@ -8,6 +8,10 @@
 #define SC2_SMI_ADDR 2
 #define SC3_SMI_ADDR 3
 
+#define M88E6390              0x0a10
+#define ADDRESS_CHIP_VERSION  0x10
+#define REGISTER_CHIP_VERSION 0x3
+
 int wmo_backplane_setup(struct mv88e6xxx_pdata *backplane);
 
 void set_product_id_from_idmem(void);

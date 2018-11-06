@@ -4,6 +4,9 @@
 
 #include <linux/phy.h>
 
+#define M88E6352 0x3520
+#define M88E6097 0x0990
+
 #define ADDRESS_CHIP_VERSION 0x10
 #define REGISTER_CHIP_VERSION 0x3
 
@@ -17,6 +20,7 @@
 #define OP_6352_PORT_SHIFT 0x5
 #define RGMII_PORT_ADDRESS 0x15
 #define PORT_STATUS_REGISTER 0x00
+#define HISTOGRAM_MODE 0xc00
 
 #define OP_COMMAND_DONE 0x8000
 #define TRY_COUNT 0x5
@@ -62,6 +66,9 @@ static int do_read_op(int product_num, struct mii_bus *bus, unsigned short port)
 
    /* dbg commented out : printf("%s : entering with op_cmd = %x and port = %x\n", __func__, op_cmd, port); */
 
+   if (product_num == M88E6390)
+      op_cmd &= ~HISTOGRAM_MODE;
+
    bus->write(bus, ADDRESS_COUNTER_OPS, REGISTER_OP_CONTROL, op_cmd);
    if (wait_for_op(bus) == COMMAND_SUCCESS)
    {
@@ -91,6 +98,9 @@ static int do_read_op(int product_num, struct mii_bus *bus, unsigned short port)
                continue;
          }
          op_cmd = OP_READ_COUNTERS | i;
+	 if (product_num == M88E6390)
+            op_cmd &= ~HISTOGRAM_MODE;
+
          /* dbg commented out : printf("%s : reading with op_cmd = %x\n", __func__, op_cmd); */
          bus->write(bus, ADDRESS_COUNTER_OPS, REGISTER_OP_CONTROL, op_cmd);
          if (wait_for_op(bus) == COMMAND_SUCCESS)
@@ -131,13 +141,18 @@ static int do_rmon_op(struct mii_bus *bus, int port)
 
    switch (product_num)
    {
-      case 0x0990:
+      case M88E6097:
          printf("We have found a 6097, which is supported.\n");
          port_num = (unsigned short)port;
          return_value = do_read_op(product_num, bus, port_num);
          break;
-      case 0x3520:
+      case M88E6352:
          printf("We have found a 6352, which is supported.\n");
+         port_num = (unsigned short)((port + 1) << OP_6352_PORT_SHIFT);
+         return_value = do_read_op(product_num, bus, port_num);
+         break;
+      case M88E6390:
+         printf("We have found a 6390, which is supported.\n");
          port_num = (unsigned short)((port + 1) << OP_6352_PORT_SHIFT);
          return_value = do_read_op(product_num, bus, port_num);
          break;
