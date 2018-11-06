@@ -134,7 +134,9 @@ void __noreturn start_barebox(void)
 
 void __noreturn hang (void)
 {
+#ifndef CONFIG_PPC
 	puts ("### ERROR ### Please RESET the board ###\n");
+#endif
 	for (;;);
 }
 
