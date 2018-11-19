@@ -97,6 +97,9 @@ static int wmo_of_fixup(struct device_node *root, void *arg)
 		}
 	}
 
+	if (of_device_is_compatible(root, "wmo,Corazon"))
+		goto out;
+
 	np = of_find_node_by_type(root, "network");
 	while (np) {
 		if (!of_device_is_available(np))
@@ -111,6 +114,7 @@ static int wmo_of_fixup(struct device_node *root, void *arg)
 		np = of_find_node_by_type(np, "network");
 	}
 
+out:
 	printf("\e[;1m[ OK ]\e[0m\n\n");
 	return 0;
 }
