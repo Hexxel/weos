@@ -114,6 +114,7 @@ static int do_memcmp(int argc, char *argv[])
 				goto out;
 			}
 			offset++;
+			ctrlc();
 		}
 
 		count -= now;
