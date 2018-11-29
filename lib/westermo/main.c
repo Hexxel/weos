@@ -58,6 +58,11 @@ static int wmo_of_fixup_mac(struct device_node *np)
 	if (of_property_read_u8_array(np, "local-mac-address", mac, 6))
 		return -EINVAL;
 
+	memcpy(mac, wmo_mac(), 6);
+
+	if (of_device_is_compatible(np, "fsl,fman-memac"))
+		return of_property_write_u8_array(np, "mac-address", mac, 6);
+
 	if (is_valid_ether_addr(mac))
 		return 0;
 
@@ -66,7 +71,6 @@ static int wmo_of_fixup_mac(struct device_node *np)
 			return -EINVAL;
 	}
 
-	memcpy(mac, wmo_mac(), 6);
 	ethaddr_add(&mac, idx);
 
 	return of_property_write_u8_array(np, "local-mac-address", mac, 6);
